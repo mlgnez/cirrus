@@ -6,13 +6,8 @@
 // - Documentation        https://dearimgui.com/docs (same as your local docs/ folder).
 // - Introduction, links and more at the top of imgui.cpp
 
-#include "imgui.h"
-#include "imgui_impl_win32.h"
-#include "imgui_impl_dx10.h"
-#include <d3d10_1.h>
-#include <d3d10.h>
-#include <tchar.h>
-#include <iostream>
+#include "includes.hpp"
+#include "HudWindow.cpp"
 
 // Data
 static ID3D10Device* g_pd3dDevice = nullptr;
@@ -30,24 +25,6 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 // Main code
 int main(int, char**)
 {
-    // Create application window
-    //ImGui_ImplWin32_EnableDpiAwareness();
-    //WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
-    //::RegisterClassExW(&wc);
-    //HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Dear ImGui DirectX10 Example", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
-
-    //// Initialize Direct3D
-    //if (!CreateDeviceD3D(hwnd))
-    //{
-    //    CleanupDeviceD3D();
-    //    ::UnregisterClassW(wc.lpszClassName, wc.hInstance);
-    //    return 1;
-    //}
-
-    //// Show the window
-    //::ShowWindow(hwnd, SW_SHOWDEFAULT);
-    //::UpdateWindow(hwnd);
-
     ImGui_ImplWin32_EnableDpiAwareness();
     WNDCLASSEX wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, _T("ImGui Standalone"), nullptr };
     ::RegisterClassEx(&wc);
@@ -79,30 +56,11 @@ int main(int, char**)
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsLight();
 
-    // Setup Platform/Renderer backends
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX10_Init(g_pd3dDevice);
     ImGui_ImplWin32_EnableAlphaCompositing(hwnd);
 
-    // Load Fonts
-    // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
-    // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-    // - If the file cannot be loaded, the function will return a nullptr. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
-    // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
-    // - Use '#define IMGUI_ENABLE_FREETYPE' in your imconfig file to use Freetype for higher quality font rendering.
-    // - Read 'docs/FONTS.md' for more instructions and details.
-    // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
-    //io.Fonts->AddFontDefault();
-    //io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 18.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-    //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
-    //IM_ASSERT(font != nullptr);
-
-    // Our state
     bool show_demo_window = false;
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -121,25 +79,21 @@ int main(int, char**)
         return -1;
     }
 
+    InputHelper input = {};
+
     // Main loop
     bool done = false;
     while (!done)
     {
-        /*if (GetForegroundWindow() != hwnd)
-        {
-            SetForegroundWindow(hwnd);
-        }*/
-        //
-        //::SetFocus(hwnd);
+        input.update();
 
         HWND foregroundWindow = GetForegroundWindow();
         if (foregroundWindow != hwnd) {
-            // Optionally use SetActiveWindow() to activate the window
             SetActiveWindow(hwnd);
         }
 
-        // Poll and handle messages (inputs, window resize, etc.)
-        // See the WndProc() function below for our to dispatch events to the Win32 backend.
+
+
         MSG msg;
         while (::PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
         {
@@ -151,7 +105,6 @@ int main(int, char**)
         if (done)
             break;
 
-        // Handle window resize (we don't resize directly in the WM_SIZE handler)
         if (g_ResizeWidth != 0 && g_ResizeHeight != 0)
         {
             CleanupRenderTarget();
@@ -167,24 +120,15 @@ int main(int, char**)
 
         ImGui::PushFont(customFont);
 
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
-
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
         {
             static float f = 0.0f;
             static int counter = 0;
 
-            /*const ImVec2 windowSize = ImVec2(800, 600);
-            const ImVec2 windowPos = ImVec2(0, 0);
-
-            ImGui::SetNextWindowSize(windowSize);
-            ImGui::SetNextWindowPos(windowPos);*/
-
             bool open_ptr = true;
 
-            ImGui::Begin("Hello, world!", &open_ptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+            ImGui::Begin("Hello, world!", &open_ptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 
             if (ImGui::Button("DraggableButton", ImVec2(100.0F, 50.0F))) {
                 ImVec2 mouseDelta = io.MouseDelta;
@@ -193,14 +137,6 @@ int main(int, char**)
                 ImGui::SetWindowPos(windowPos);
 
             }
-
-            /*if (ImGui::IsMouseReleased(0)) {
-                dragWindow = false;
-            }
-
-            if (dragWindow && ImGui::IsMouseDragging(0)) {
-
-            }*/
 
             if (ImGui::IsWindowHovered())
             {
