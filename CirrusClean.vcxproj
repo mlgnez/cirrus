@@ -104,6 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>./libs/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -130,7 +131,6 @@
   <ItemGroup>
     <ClCompile Include="HudWindow.cpp" />
     <ClCompile Include="imgui_demo.cpp" />
-    <ClCompile Include="Input.cpp" />
     <ClCompile Include="Input.hpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="imgui.cpp" />
@@ -150,6 +150,17 @@
     <ClInclude Include="imstb_textedit.h" />
     <ClInclude Include="imstb_truetype.h" />
     <ClInclude Include="includes.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="libs\lua54.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="libs\lua54.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="K2D-Thin.ttf">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -8,7 +8,11 @@
 
 #include "includes.hpp"
 #include "HudWindow.cpp"
-
+extern "C" {
+    #include <lua.h>
+    #include <lauxlib.h>
+    #include <lualib.h>
+}
 // Data
 static ID3D10Device* g_pd3dDevice = nullptr;
 static IDXGISwapChain* g_pSwapChain = nullptr;
@@ -25,6 +29,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 // Main code
 int main(int, char**)
 {
+    
     ImGui_ImplWin32_EnableDpiAwareness();
     WNDCLASSEX wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, _T("ImGui Standalone"), nullptr };
     ::RegisterClassEx(&wc);
@@ -72,7 +77,7 @@ int main(int, char**)
 
     LONG_PTR exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
 
-    ImFont* customFont = io.Fonts->AddFontFromFileTTF("F:/COMIC.TTF", 16.0f);
+    ImFont* customFont = io.Fonts->AddFontFromFileTTF("./K2D-Thin.ttf", 16.0f);
 
     if (!customFont) {
         std::cout << "no worky" << std::endl;
