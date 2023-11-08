@@ -10,3 +10,8 @@
 #include <unordered_map>
 #include <tuple>
 #include "Input.hpp"
+extern "C" {
+	#include <lua.h>
+	#include <lauxlib.h>
+	#include <lualib.h>
+}

@@ -1,18 +1,6 @@
-// Dear ImGui: standalone example application for DirectX 10
-
-// Learn about Dear ImGui:
-// - FAQ                  https://dearimgui.com/faq
-// - Getting Started      https://dearimgui.com/getting-started
-// - Documentation        https://dearimgui.com/docs (same as your local docs/ folder).
-// - Introduction, links and more at the top of imgui.cpp
-
 #include "includes.hpp"
-#include "HudWindow.cpp"
-extern "C" {
-    #include <lua.h>
-    #include <lauxlib.h>
-    #include <lualib.h>
-}
+#include "HudWindow.hpp"
+
 // Data
 static ID3D10Device* g_pd3dDevice = nullptr;
 static IDXGISwapChain* g_pSwapChain = nullptr;
@@ -29,12 +17,19 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 // Main code
 int main(int, char**)
 {
-    
     ImGui_ImplWin32_EnableDpiAwareness();
     WNDCLASSEX wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, _T("ImGui Standalone"), nullptr };
     ::RegisterClassEx(&wc);
     const wchar_t CLASS_NAME[] = L"Imgui Standalone";
-    HWND hwnd = CreateWindowEx(WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_LAYERED, CLASS_NAME, L"Imgui Standalone", WS_POPUP, 0, 0, 3240, 2160, NULL, NULL, wc.hInstance, NULL);
+
+    RECT desktop;
+    const HWND hDesktop = GetDesktopWindow();
+
+    GetWindowRect(hDesktop, &desktop);
+
+    printf("window: %d, %d", desktop.right, desktop.bottom);
+
+    HWND hwnd = CreateWindowEx(WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_LAYERED, CLASS_NAME, L"Imgui Standalone", WS_POPUP, 0, 0, desktop.right, desktop.bottom, NULL, NULL, wc.hInstance, NULL);
 
     COLORREF color = 0;
     BYTE alpha = 255;
@@ -85,6 +80,28 @@ int main(int, char**)
     }
 
     InputHelper input = {};
+    HudWindowRegistry* registry = new HudWindowRegistry();
+    registry->exStyle = exStyle;
+    registry->hwnd = hwnd;
+
+    HudWinScripts scripts = {};
+    scripts.init = R"(
+        local handle = getCurrentHandle()
+        
+        setHudWindowName(handle, "I was written in lua!")
+    )";
+
+    scripts.prerender = R"(
+        local handle = getCurrentHandle()
+        setWidth(handle, 250)
+        setHeight(handle, 512)
+    )";
+
+    scripts.render = R"(
+        
+    )";
+
+    registry->registerWindow(scripts);
 
     // Main loop
     bool done = false;
@@ -125,62 +142,10 @@ int main(int, char**)
 
         ImGui::PushFont(customFont);
 
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
-        {
-            static float f = 0.0f;
-            static int counter = 0;
+        ImGui::PopFont();
 
-            bool open_ptr = true;
+        registry->renderAll(input);
 
-            ImGui::Begin("Hello, world!", &open_ptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-
-            if (ImGui::Button("DraggableButton", ImVec2(100.0F, 50.0F))) {
-                ImVec2 mouseDelta = io.MouseDelta;
-                windowPos.x += mouseDelta.x;
-                windowPos.y += mouseDelta.y;
-                ImGui::SetWindowPos(windowPos);
-
-            }
-
-            if (ImGui::IsWindowHovered())
-            {
-                exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
-                SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle & ~WS_EX_TRANSPARENT);
-            }
-            else {
-                exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
-                SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle | WS_EX_TRANSPARENT);
-            }
-
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-
-            ImGui::PopFont();
-
-            ImGui::End();
-        }
-
-        // 3. Show another simple window.
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
-        }
 
         // Rendering
         ImGui::Render();
@@ -192,6 +157,8 @@ int main(int, char**)
         g_pSwapChain->Present(1, 0); // Present with vsync
         //g_pSwapChain->Present(0, 0); // Present without vsync
     }
+
+    delete registry;
 
     ImGui_ImplDX10_Shutdown();
     ImGui_ImplWin32_Shutdown();
