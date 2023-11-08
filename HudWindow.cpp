@@ -14,7 +14,7 @@ HudWindow::HudWindow(HudWinScripts lua) {
 	InjectHudWinSL(lua_state);
 }
 
-void HudWindow::render(InputHelper input) {
+void HudWindow::render() {
 	if (luaL_dostring(lua_state, scripts.prerender.c_str()) != LUA_OK) {
 		std::cerr << "Failed to prerender HudWindow:" << lua_tostring(lua_state, -1) << std::endl;
 	}
@@ -22,6 +22,8 @@ void HudWindow::render(InputHelper input) {
 	ImGui::SetNextWindowSize(size);
 
 	ImGui::Begin(name.c_str(), NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+
+	pos = ImGui::GetWindowPos();
 
 	if (ImGui::IsWindowHovered())
 	{
@@ -36,6 +38,8 @@ void HudWindow::render(InputHelper input) {
 	if (luaL_dostring(lua_state, scripts.render.c_str()) != LUA_OK) {
 		std::cerr << "Failed to initialize HudWindow:" << lua_tostring(lua_state, -1) << std::endl;
 	}
+
+	ImGui::SetWindowPos(pos);
 
 	ImGui::End();
 }
@@ -69,7 +73,11 @@ HudWindowRegistry* HudWindowRegistry::Singleton = nullptr;
 
 
 // class HudWindowRegistry {
-HudWindowRegistry::HudWindowRegistry() {
+HudWindowRegistry::HudWindowRegistry(InputHelper* input, LONG_PTR exStyle, HWND hwnd, TimeKeeper* timekeeper) {
+	this->input = input;
+	this->exStyle = exStyle;
+	this->hwnd = hwnd;
+	this->timekeeper = timekeeper;
 	curHandle = -1;
 	if (HudWindowRegistry::Singleton == nullptr) {
 		isSingletonInstance = true;
@@ -87,6 +95,7 @@ std::tuple<int, HudWindow*> HudWindowRegistry::registerWindow(HudWinScripts lua)
 	window->setRegistry(this);
 	window->exStyle = exStyle;
 	window->hwnd = hwnd;
+	window->input = input;
 
 	window->awake();
 	curHandle = -1;
@@ -95,10 +104,10 @@ std::tuple<int, HudWindow*> HudWindowRegistry::registerWindow(HudWinScripts lua)
 }
 
 
-void HudWindowRegistry::renderAll(InputHelper input) {
+void HudWindowRegistry::renderAll() {
 	for (const auto& pair : windows) {
 		curHandle = pair.first;
-		pair.second->render(input);
+		pair.second->render();
 	}
 }
 
@@ -163,6 +172,75 @@ static int setHeight(lua_State* L) {
 	return 0;
 }
 
+static int getWidth(lua_State* L) {
+	int handle = luaL_checknumber(L, 1);
+	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+
+	lua_pushnumber(L, HudWin->getSize().x);
+
+	return 1;
+}
+
+static int getHeight(lua_State* L) {
+	int handle = luaL_checknumber(L, 1);
+	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+
+	lua_pushnumber(L, HudWin->getSize().y);
+
+	return 1;
+}
+
+static int getX(lua_State* L) {
+	int handle = luaL_checknumber(L, 1);
+	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+
+	lua_pushnumber(L, HudWin->pos.x);
+
+	return 1;
+}
+
+static int getY(lua_State* L) {
+	int handle = luaL_checknumber(L, 1);
+	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+
+	lua_pushnumber(L, HudWin->pos.y);
+
+	return 1;
+}
+
+static int setX(lua_State* L) {
+	int handle = luaL_checknumber(L, 1);
+	float x = luaL_checknumber(L, 2);
+
+	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+
+	HudWin->pos.x = x;
+
+	return 0;
+}
+
+static int setY(lua_State* L) {
+	int handle = luaL_checknumber(L, 1);
+	float y = luaL_checknumber(L, 2);
+
+	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+
+	HudWin->pos.y = y;
+
+	return 0;
+}
+
+static int isKeyPressed(lua_State* L) {
+	int keyCode = luaL_checknumber(L, 1);
+
+	auto input = HudWindowRegistry::Singleton->input;
+
+	lua_pushboolean(L, input->isKeyPressed(keyCode));
+
+	return 1;
+}
+
+
 // Inject Hud Window Standard Library
 void InjectHudWinSL(lua_State* L) {
 	std::unordered_map<std::string, LuaCFunction> functionMap;
@@ -172,7 +250,14 @@ void InjectHudWinSL(lua_State* L) {
 	functionMap["setHudWindowName"] = setHudWindowName;
 	functionMap["setWidth"] = setWidth;
 	functionMap["setHeight"] = setHeight;
-
+	functionMap["getWidth"] = getWidth;
+	functionMap["getHeight"] = getHeight;
+	functionMap["getX"] = getX;
+	functionMap["getY"] = getY;
+	functionMap["setX"] = setX;
+	functionMap["setY"] = setY;
+	functionMap["isKeyPressed"] = isKeyPressed;
+	functionMap["getDeltaTime"] = [](lua_State* L) { lua_pushnumber(L, HudWindowRegistry::Singleton->timekeeper->deltaTime); return 1; };
 
 	for (const auto& pair : functionMap) {
 		lua_register(L, pair.first.c_str(), pair.second);

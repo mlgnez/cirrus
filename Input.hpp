@@ -10,7 +10,8 @@ public:
 	inline void update() {
 		for (int key = 0; key < 256; key++) {
 			prevKeyStates[key] = keyStates[key];
-			keyStates[key] = (GetAsyncKeyState(key) & 0x8000) != 0;
+			bool isdown = (GetAsyncKeyState(key) & 0x8000) != 0;
+			keyStates[key] = isdown;
 		}
 	}
 

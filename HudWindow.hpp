@@ -9,6 +9,8 @@ struct HudWinScripts {
 
 class HudWindowRegistry;
 
+// Dictionary<int, List<Elements>> priorityQueue;
+
 class HudWindow {
 private:
 	HudWinScripts scripts;
@@ -16,13 +18,15 @@ private:
 	lua_State* lua_state;
 	ImVec2 size;
 public:
+	InputHelper* input;
 	std::string name;
 	LONG_PTR exStyle;
 	HWND hwnd;
+	ImVec2 pos;
 
 	HudWindow(HudWinScripts lua);
 
-	void render(InputHelper input);
+	void render();
 
 	void awake();
 
@@ -45,13 +49,15 @@ public:
 	bool isSingletonInstance = false;
 	LONG_PTR exStyle;
 	HWND hwnd;
+	InputHelper* input;
+	TimeKeeper* timekeeper;
 
-	HudWindowRegistry();
+	HudWindowRegistry(InputHelper* input, LONG_PTR exStyle, HWND hwnd, TimeKeeper* timekeeper);
 
 	std::tuple<int, HudWindow*> registerWindow(HudWinScripts lua);
 
 
-	void renderAll(InputHelper input);
+	void renderAll();
 
 	HudWindow* get(int handle);
 };
