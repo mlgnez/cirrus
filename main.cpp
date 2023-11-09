@@ -83,42 +83,7 @@ int main(int, char**)
     TimeKeeper* timeKeeper = new TimeKeeper();
     HudWindowRegistry* registry = new HudWindowRegistry(input, exStyle, hwnd, timeKeeper);
 
-    HudWinScripts scripts = {};
-    scripts.init = R"(
-        local handle = getCurrentHandle()
-        
-        setHudWindowName(handle, "I was written in lua!")
-    )";
-
-    scripts.prerender = R"(
-        local handle = getCurrentHandle()
-
-        setWidth(handle, 250)
-        setHeight(handle, 512)
-    )";
-
-    scripts.render = R"(
-        local handle = getCurrentHandle()
-        local y = getY(handle)
-        local move = 0
-        
-
-        if isKeyPressed(38) then
-            move = move - 25 * getDeltaTime()
-        end
-        
-        if isKeyPressed(40) then
-            move = move + 25 * getDeltaTime()
-        end
-
-        print(move)
-
-        setY(handle, y + move)
-    )";
-
-
-
-    registry->registerWindow(scripts);
+    registry->initLua();
 
 
     // Main loop

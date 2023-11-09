@@ -105,6 +105,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>./libs/include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -132,6 +133,7 @@
     <ClCompile Include="HudWindow.cpp" />
     <ClCompile Include="imgui_demo.cpp" />
     <ClCompile Include="Input.hpp" />
+    <ClCompile Include="LuaSL.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="imgui.cpp" />
     <ClCompile Include="imgui_draw.cpp" />
@@ -151,10 +153,12 @@
     <ClInclude Include="imstb_textedit.h" />
     <ClInclude Include="imstb_truetype.h" />
     <ClInclude Include="includes.hpp" />
+    <ClInclude Include="LuaSL.hpp" />
     <ClInclude Include="TimeKeeper.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="libs\lua54.dll" />
+    <None Include="README.MD" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="libs\lua54.lib" />
