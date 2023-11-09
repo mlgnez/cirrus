@@ -1,4 +1,5 @@
 #include "HudWindow.hpp"
+
 using LuaCFunction = int (*)(lua_State* L);
 
 void InjectHudWinSL(lua_State* L);
@@ -39,6 +40,21 @@ void HudWindow::render() {
 		std::cerr << "Failed to render HudWindow:" << lua_tostring(lua_state, -1) << std::endl;
 	}
 
+	//put list shit here
+
+	TextWidget* textTest = new TextWidget();
+	textTest->setPosX(0);
+	textTest->setPosY(0);
+
+	textTest->setHeight(250);
+	textTest->setWidth(250);
+
+	textTest->setText("w");
+
+	textTest->render();
+
+	delete textTest;
+	
 	ImGui::SetWindowPos(pos);
 
 	ImGui::End();

@@ -6,7 +6,7 @@ private:
 	ImVec2 size;
 	ImVec2 position;
 public:
-	virtual void render(); //only call when going through element list (for future)
+	void render(); //only call when going through element list (for future)
 
 	void setWidth(float width);
 	void setHeight(float height);
@@ -23,7 +23,7 @@ public:
 class TextWidget : public Widget {
 
 private:
-	std::string text;
+	std::string text = "";
 public:
 	void render();
 

@@ -48,6 +48,9 @@
     <ClCompile Include="LuaSL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imconfig.h">
@@ -84,6 +87,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LuaSL.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widget.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

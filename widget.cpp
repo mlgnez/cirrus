@@ -3,11 +3,13 @@
 void Widget::setWidth(float width) {
 	size.x = width;
 }
+void Widget::render() {
+}
 void Widget::setHeight(float height) {
 	size.y = height;
 }
-void Widget::setPosY(float y) {
-	position.y = y;
+void Widget::setPosX(float x) {
+	position.x = x;
 }
 void Widget::setPosY(float y) {
 	position.y = y;
@@ -19,8 +21,8 @@ float Widget::getWidth() {
 float Widget::getHeight() {
 	return size.y;
 }
-float Widget::getPosY() {
-	return position.y;
+float Widget::getPosX() {
+	return position.x;
 }
 float Widget::getPosY() {
 	return position.y;

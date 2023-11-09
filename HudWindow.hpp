@@ -1,5 +1,6 @@
 #pragma once
 #include "includes.hpp"
+#include "widget.hpp"
 #include "LuaSL.hpp"
 
 struct HudWinScripts {
@@ -26,6 +27,7 @@ private:
 	lua_State* lua_state;
 	ImVec2 size;
 	PersistentDataStore* persistentData;
+	std::unordered_map<int, std::vector<Widget*>> widgetList;
 public:
 	InputHelper* input;
 	std::string name;
