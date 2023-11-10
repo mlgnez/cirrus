@@ -1,3 +1,3 @@
 Version = "1.0"
-Identifier = "test"
-DisplayName = "My First Addon"
+Identifier = "bouncy"
+DisplayName = "Bouncing around at the speed of sound"

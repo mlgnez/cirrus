@@ -63,6 +63,9 @@
     <ClCompile Include="Input.hpp">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="UrlProtocolManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes.hpp">
@@ -108,6 +111,9 @@
       <Filter>Source Files\imgui</Filter>
     </ClInclude>
     <ClInclude Include="HudWindow.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UrlProtocolManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

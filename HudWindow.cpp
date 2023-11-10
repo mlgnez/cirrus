@@ -212,7 +212,7 @@ void HudWindowRegistry::initLua() {
 		lua_State* L = luaL_newstate();
 		auto path = entry.path().string();
 
-		auto manifestpath = path + "/manifest.lua";
+		auto manifestpath = path + "/manifest.json";
 		
 		if (!fs::exists(manifestpath) || !fs::is_regular_file(manifestpath)) {
 			continue;
@@ -224,27 +224,9 @@ void HudWindowRegistry::initLua() {
 			continue;
 		}
 
-		auto manifest = manifest_op.value();
+		auto manifest = json::parse(manifest_op.value());
 
-		if (luaL_dostring(L, manifest.c_str()) != LUA_OK) {
-			std::cerr << "Manifest failed with:" << lua_tostring(L, -1) << std::endl;
-			continue;
-		}
-
-		// Required Field
-		lua_getglobal(L, "Version");
-		auto version = getStringFromLuaState(L, 1);
-		lua_pop(L, 1);
-
-		// Required Field
-		lua_getglobal(L, "Identifier");
-		auto ident = getStringFromLuaState(L, 1);
-		lua_pop(L, 1);
-
-		// Required Field
-		lua_getglobal(L, "DisplayName");
-		auto name = getStringFromLuaState(L, 1);
-		lua_pop(L, 1);
+		
 
 		auto addon = new Addon();
 		addon->folderPath = path;

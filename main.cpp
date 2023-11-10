@@ -15,14 +15,41 @@ void CleanupRenderTarget();
 void SetupCirrusLight();
 void SetupCirrusDark();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam);
 
 // Main code
-int main(int, char**)
+int main(int argc, char* argv[])
 {
+    if (argc > 1) {
+        // The URL should be in argv[1]
+        std::string url = argv[1];
+        std::cout << "Received URL: " << url << std::endl;
+
+        // Parse the URL as needed
+        // For example, extract 'af022dac1' from 'cirrus://af022dac1'
+        std::string protocolPrefix = "cirrus://";
+        if (url.substr(0, protocolPrefix.size()) == protocolPrefix) {
+            std::string data = url.substr(protocolPrefix.size());
+            std::cout << "Extracted data: " << data << std::endl;
+
+            httplib::Client cli("https://raw.githubusercontent.com");
+
+            auto res = cli.Get("/Rubyboat1207/cumulohost/main/" + data + "/.json");
+
+            if (res && res->status == 200) {
+                
+            }
+        }
+        return 0;
+    }
+
+    init_url_protocol();
+    
+
     ImGui_ImplWin32_EnableDpiAwareness();
     WNDCLASSEX wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, _T("ImGui Standalone"), nullptr };
     ::RegisterClassEx(&wc);
-    const wchar_t CLASS_NAME[] = L"Imgui Standalone";
+    const wchar_t CLASS_NAME[] = L"Cirrus HUD Container";
 
     RECT desktop;
     const HWND hDesktop = GetDesktopWindow();
@@ -245,8 +272,38 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
         ::PostQuitMessage(0);
         return 0;
+
+    case WM_COPYDATA: {
+        PCOPYDATASTRUCT pCDS = (PCOPYDATASTRUCT)lParam;
+        if (pCDS->cbData == 32) { // Check if the data size is 32 bytes
+            char* message = (char*)pCDS->lpData;
+            
+        }
+        break;
+    }
     }
     return ::DefWindowProcW(hWnd, msg, wParam, lParam);
+}
+
+BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam, char message[32]) {
+    const int length = GetWindowTextLength(hWnd) + 1;
+    wchar_t* buffer = new wchar_t[length];
+
+    GetWindowText(hWnd, buffer, length);
+
+    // Check if the window title is "Cirrus HUD Container"
+    if (std::wstring(buffer) == L"Cirrus HUD Container") {
+        COPYDATASTRUCT cds;
+        cds.dwData = 1; // Can be anything
+        cds.lpData = message;
+        cds.cbData = 32; // Size of the message
+
+        SendMessage(hWnd, WM_COPYDATA, (WPARAM)(HWND)hWnd, (LPARAM)(LPVOID)&cds);
+    }
+
+
+    delete[] buffer;
+    return TRUE;
 }
 
 void SetupCirrusLight()
