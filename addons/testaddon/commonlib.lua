@@ -104,6 +104,24 @@ function setPersistentFloat(handle, name, pushdata) end
 ---@param renderPriority number Lower number renders first, higher number renders last
 function addTextWidget(handle, identifier, renderPriority) end
 
+-- Adds a button widget to a specific HUD window
+---@param handle number The handle of the HUD window.
+---@param identifier string The desired identifier, must be unique
+---@param renderPriority number Lower number renders first, higher number renders last
+function addButtonWidget(handle, identifier, renderPriority) end
+
+-- Adds an onclick callback to awidget to a specific HUD window
+---@param handle number The handle of the HUD window.
+---@param identifier string The desired identifier, must be unique
+---@param callback string name of callback
+function setButtonOnClick(handle, identifier, callback) end
+
+-- Adds an onclick callback to awidget to a specific HUD window
+---@param handle number The handle of the HUD window.
+---@param identifier string The desired identifier, must be unique
+---@param label string label text
+function setButtonWidgetLabel(handle, identifier, label) end
+
 -- Modifies the text of a text widget
 ---@param handle number The handle of the HUD window.
 ---@param identifier string The desired identifier
@@ -124,6 +142,20 @@ function setWidgetX(handle, identifier, x) end
 ---@param y number The text
 ---@return boolean success returns whether or not the action was successful
 function setWidgetY(handle, identifier, y) end
+
+-- Sets the Width position of a widget
+---@param handle number The handle of the HUD window.
+---@param identifier string The desired identifier
+---@param width number The text
+---@return boolean success returns whether or not the action was successful
+function setWidgetWidth(handle, identifier, width) end
+
+-- Sets the Height position of a widget
+---@param handle number The handle of the HUD window.
+---@param identifier string The desired identifier
+---@param height number The text
+---@return boolean success returns whether or not the action was successful
+function setWidgetHeight(handle, identifier, height) end
 
 -- Gets the X position of a widget
 ---@param handle number The handle of the HUD window.

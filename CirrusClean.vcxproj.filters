@@ -13,36 +13,21 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\imgui">
+      <UniqueIdentifier>{0d074d03-ad66-47e1-9c22-014f10c8e5f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\httplib">
+      <UniqueIdentifier>{70497699-7dc9-4926-b73b-3bae954502b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\lua">
+      <UniqueIdentifier>{9c43d0b3-f0d4-4bb9-9411-f96a0b1326df}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="imgui.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="imgui_draw.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="imgui_tables.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="imgui_widgets.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="imgui_impl_dx10.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="imgui_impl_win32.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="imgui_demo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="HudWindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Input.hpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="LuaSL.cpp">
@@ -54,43 +39,37 @@
     <ClCompile Include="luahttp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="imgui.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_demo.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_draw.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_impl_dx10.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_impl_win32.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_tables.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_widgets.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Input.hpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="imconfig.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui_internal.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="imstb_rectpack.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="imstb_textedit.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="imstb_truetype.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui_impl_win32.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui_impl_dx10.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="includes.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HudWindow.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="TimeKeeper.hpp">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="httplib.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="luahttp.hpp">
       <Filter>Header Files</Filter>
@@ -101,38 +80,65 @@
     <ClInclude Include="LuaSL.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="json.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="imconfig.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_impl_dx10.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_impl_win32.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_internal.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="httplib.h">
+      <Filter>Source Files\httplib</Filter>
+    </ClInclude>
+    <ClInclude Include="imstb_rectpack.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imstb_textedit.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imstb_truetype.h">
+      <Filter>Source Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="HudWindow.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="libs\lua54.dll">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="README.MD">
       <Filter>Source Files</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="libs\lua54.lib">
-      <Filter>Source Files</Filter>
-    </Library>
+    <None Include="libs\lua54.dll">
+      <Filter>Source Files\lua</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="K2D-Thin.ttf">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="libs\libcrypto-1_1-x64.dll">
-      <Filter>Source Files</Filter>
+    <CopyFileToFolders Include="libs\libcrypto.lib">
+      <Filter>Source Files\httplib</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="libs\libssl-1_1-x64.dll">
-      <Filter>Source Files</Filter>
+    <CopyFileToFolders Include="libs\libcrypto-1_1-x64.dll">
+      <Filter>Source Files\httplib</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="libs\libssl.lib">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\httplib</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="libs\libcrypto.lib">
-      <Filter>Source Files</Filter>
+    <CopyFileToFolders Include="libs\libssl-1_1-x64.dll">
+      <Filter>Source Files\httplib</Filter>
     </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="libs\lua54.lib">
+      <Filter>Source Files\lua</Filter>
+    </Library>
   </ItemGroup>
 </Project>
