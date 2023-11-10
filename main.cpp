@@ -29,8 +29,6 @@ int main(int, char**)
 
     GetWindowRect(hDesktop, &desktop);
 
-    printf("window: %d, %d", desktop.right, desktop.bottom);
-
     HWND hwnd = CreateWindowEx(WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_LAYERED, CLASS_NAME, L"Imgui Standalone", WS_POPUP, 0, 0, desktop.right, desktop.bottom, NULL, NULL, wc.hInstance, NULL);
 
     COLORREF color = 0;
@@ -128,6 +126,8 @@ int main(int, char**)
         ImGui::PushFont(customFont);
 
         ImGui::PopFont();
+
+        
 
 
         timeKeeper->update();

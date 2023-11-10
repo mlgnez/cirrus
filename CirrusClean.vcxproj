@@ -70,6 +70,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LibraryPath>./libs;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -110,7 +113,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>d3d10.lib;d3dcompiler.lib;dxgi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d10.lib;d3dcompiler.lib;dxgi.lib;libcrypto.lib;libssl.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -133,6 +136,7 @@
     <ClCompile Include="HudWindow.cpp" />
     <ClCompile Include="imgui_demo.cpp" />
     <ClCompile Include="Input.hpp" />
+    <ClCompile Include="luahttp.cpp" />
     <ClCompile Include="LuaSL.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="imgui.cpp" />
@@ -144,6 +148,7 @@
     <ClCompile Include="widget.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="httplib.h" />
     <ClInclude Include="HudWindow.hpp" />
     <ClInclude Include="imconfig.h" />
     <ClInclude Include="imgui.h" />
@@ -154,15 +159,32 @@
     <ClInclude Include="imstb_textedit.h" />
     <ClInclude Include="imstb_truetype.h" />
     <ClInclude Include="includes.hpp" />
+    <ClInclude Include="luahttp.hpp" />
     <ClInclude Include="LuaSL.hpp" />
     <ClInclude Include="TimeKeeper.hpp" />
     <ClInclude Include="widget.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <CopyFileToFolders Include="libs\libcrypto-1_1-x64.dll">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="libs\libssl-1_1-x64.dll">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
     <None Include="libs\lua54.dll" />
     <None Include="README.MD" />
   </ItemGroup>
   <ItemGroup>
+    <CopyFileToFolders Include="libs\libcrypto.lib">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="libs\libssl.lib">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
     <Library Include="libs\lua54.lib" />
   </ItemGroup>
   <ItemGroup>

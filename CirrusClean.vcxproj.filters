@@ -51,6 +51,9 @@
     <ClCompile Include="widget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="luahttp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imconfig.h">
@@ -86,11 +89,17 @@
     <ClInclude Include="TimeKeeper.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LuaSL.hpp">
+    <ClInclude Include="httplib.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="luahttp.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="widget.hpp">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LuaSL.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -109,6 +118,18 @@
   <ItemGroup>
     <CopyFileToFolders Include="K2D-Thin.ttf">
       <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="libs\libcrypto-1_1-x64.dll">
+      <Filter>Source Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="libs\libssl-1_1-x64.dll">
+      <Filter>Source Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="libs\libssl.lib">
+      <Filter>Source Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="libs\libcrypto.lib">
+      <Filter>Source Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>
 </Project>

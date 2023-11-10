@@ -20,6 +20,12 @@ struct PersistentDataStore {
 	std::unordered_map<std::string, boolean> flagStorage;
 };
 
+struct CallbackFunction {
+	std::string callbackPath;
+	std::function<void(lua_State*)> callbackSetup;
+	std::function<void(lua_State*)> callbackCleanup;
+};
+
 class HudWindow {
 private:
 	HudWinScripts* scripts;
@@ -29,6 +35,9 @@ private:
 	PersistentDataStore* persistentData;
 	std::unordered_map<int, std::vector<Widget*>> widgetList;
 	std::unordered_map<std::string, Widget*> widgetIdentifiers;
+	std::vector<CallbackFunction> queuedCallbackRunners;
+	std::mutex callbackmutex;
+
 public:
 	InputHelper* input;
 	std::string name;
@@ -55,6 +64,12 @@ public:
 
 	void addWidget(std::string identifier, int renderPriority, Widget* widget);
 
+	void addCallback(CallbackFunction callbackfunc);
+
+	inline bool scriptsEqual(HudWinScripts* scripts) {
+		return scripts == this->scripts;
+	}
+
 	template <typename T>
 	std::optional<T*> getWidget(std::string identifier);
 };
@@ -65,6 +80,7 @@ public:
 	std::string version;
 	std::string identifier;
 	std::string display_name;
+	std::string folderPath;
 };
 
 class HudWindowRegistry {
@@ -90,4 +106,5 @@ public:
 
 	HudWindow* get(int handle);
 	std::optional<int> gethandle(std::string name);
+	Addon* getAddonFromWindow(HudWindow* window);
 };

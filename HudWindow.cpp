@@ -3,7 +3,6 @@
 using LuaCFunction = int (*)(lua_State* L);
 
 void InjectHudWinSL(lua_State* L);
-std::string getStringFromLuaState(lua_State* L, int stackIdx);
 
 // class HudWindow {
 HudWindow::HudWindow(HudWinScripts* lua) {
@@ -13,6 +12,7 @@ HudWindow::HudWindow(HudWinScripts* lua) {
 	lua_state = luaL_newstate();
 	luaL_openlibs(lua_state);
 
+	IncludeLuaHttp(lua_state);
 	InjectHudWinSL(lua_state);
 	IncludeLuaSL(lua_state);
 }
@@ -36,6 +36,33 @@ void HudWindow::render() {
 	if (luaL_dostring(lua_state, scripts->prerender.c_str()) != LUA_OK) {
 		std::cerr << "Failed to prerender HudWindow:" << lua_tostring(lua_state, -1) << std::endl;
 	}
+
+	if (queuedCallbackRunners.size() > 0) {
+		callbackmutex.lock();
+
+		Addon* addon = HudWindowRegistry::Singleton->getAddonFromWindow(this);
+
+		for (auto const& callbacks : queuedCallbackRunners) {
+			auto path = addon->folderPath + "/callbacks/" + callbacks.callbackPath + ".lua";
+
+			callbacks.callbackSetup(lua_state);
+
+			auto optext = readFile(path);
+
+			if (optext.has_value()) {
+				if (luaL_dostring(lua_state, optext.value().c_str()) != LUA_OK) {
+					std::cerr << "Failed to run a callback:" << lua_tostring(lua_state, -1) << std::endl;
+				}
+			}
+
+			callbacks.callbackCleanup(lua_state);
+		}
+
+		queuedCallbackRunners.clear();
+
+		callbackmutex.unlock();
+	}
+	
 
 	ImGui::SetNextWindowSize(size);
 
@@ -114,6 +141,16 @@ std::optional<T*> HudWindow::getWidget(std::string identifier) {
 
 	return derived;
 }
+
+void HudWindow::addCallback(CallbackFunction callbackfunc) {
+
+	callbackmutex.lock();
+
+	queuedCallbackRunners.push_back(callbackfunc);
+
+	callbackmutex.unlock();
+}
+
 //  };
 
 HudWindowRegistry* HudWindowRegistry::Singleton = nullptr;
@@ -149,7 +186,6 @@ std::tuple<int, HudWindow*> HudWindowRegistry::registerWindow(HudWinScripts* lua
 
 	return std::make_tuple(location, window);
 }
-
 
 void HudWindowRegistry::renderAll() {
 	for (const auto& pair : windows) {
@@ -211,6 +247,7 @@ void HudWindowRegistry::initLua() {
 		lua_pop(L, 1);
 
 		auto addon = new Addon();
+		addon->folderPath = path;
 		addon->version = version;
 		addon->identifier = ident;
 		addon->display_name = name;
@@ -249,30 +286,30 @@ bool iequals(std::string& a, std::string& b) {
 }
 
 std::optional<int> HudWindowRegistry::gethandle(std::string name) {
+	std::mutex m;
+
+	m.lock();
 	for (const auto& pair : windows) {
 		auto hwinname = pair.second->name;
 		if (iequals(name, hwinname)) {
 			return std::make_optional(pair.first);
 		}
 	}
+	m.unlock();
 
 	return {};
 }
-// };
 
-
-
-std::string getStringFromLuaState(lua_State* L, int stackIdx) {
-	if (!lua_isstring(L, stackIdx)) {
-		throw std::runtime_error("Stack variable is not a string at given index");
+Addon* HudWindowRegistry::getAddonFromWindow(HudWindow* window) {
+	for (auto const& addon : addons) {
+		if (window->scriptsEqual(addon->scripts)) {
+			return addon;
+		}
 	}
 
-	const char* cstr = lua_tostring(L, stackIdx);
-
-	std::string cppstr(cstr);
-
-	return cppstr;
+	return nullptr;
 }
+// };
 
 static int getCurrentHandle(lua_State* L) {
 	lua_pushinteger(L, HudWindowRegistry::Singleton->curHandle);

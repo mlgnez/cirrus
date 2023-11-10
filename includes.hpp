@@ -4,6 +4,9 @@
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx10.h"
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+#include "httplib.h"
+#include <mutex>
 #include <filesystem>
 #include <d3d10_1.h>
 #include <d3d10.h>
@@ -24,7 +27,21 @@ extern "C" {
 	#include <lauxlib.h>
 	#include <lualib.h>
 }
+#include "luahttp.hpp"
+
 namespace fs = std::filesystem;
+
+inline std::string getStringFromLuaState(lua_State* L, int stackIdx) {
+	if (!lua_isstring(L, stackIdx)) {
+		throw std::runtime_error("Stack variable is not a string at given index");
+	}
+
+	const char* cstr = lua_tostring(L, stackIdx);
+
+	std::string cppstr(cstr);
+
+	return cppstr;
+}
 
 inline std::optional<std::string> readFile(std::string path, bool silent=false) {
 	if (!fs::exists(path) || !fs::is_regular_file(path)) {
