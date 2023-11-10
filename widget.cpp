@@ -34,6 +34,7 @@ ImVec2 Widget::getPos() {
 
 void TextWidget::render() {
 	ImGui::Text(text.c_str());
+
 }
 
 void TextWidget::setText(std::string text) {
@@ -41,5 +42,29 @@ void TextWidget::setText(std::string text) {
 }
 
 std::string TextWidget::getText() {
+	return text;
+}
+
+void ButtonWidget::render() {
+
+	if (ImGui::Button(this->text.c_str(), size)) {
+
+		this->function();
+
+	}
+
+}
+
+void ButtonWidget::onClick(std::function<void()> function) {
+
+	this->function = function;
+
+}
+
+void ButtonWidget::setText(std::string text) {
+	this->text = text;
+}
+
+std::string ButtonWidget::getText() {
 	return text;
 }

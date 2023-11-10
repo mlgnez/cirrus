@@ -36,6 +36,11 @@ void HudWindow::render() {
 	if (luaL_dostring(lua_state, scripts->prerender.c_str()) != LUA_OK) {
 		std::cerr << "Failed to prerender HudWindow:" << lua_tostring(lua_state, -1) << std::endl;
 	}
+	
+
+	ImGui::SetNextWindowSize(size);
+
+	ImGui::Begin(name.c_str(), NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
 	if (queuedCallbackRunners.size() > 0) {
 		callbackmutex.lock();
@@ -62,11 +67,6 @@ void HudWindow::render() {
 
 		callbackmutex.unlock();
 	}
-	
-
-	ImGui::SetNextWindowSize(size);
-
-	ImGui::Begin(name.c_str(), NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
 	if (ImGui::IsWindowHovered())
 	{
@@ -508,6 +508,19 @@ static int addTextWidget(lua_State* L) {
 	return 0;
 }
 
+static int addButtonWidget(lua_State* L) {
+	int handle = luaL_checknumber(L, 1);
+	std::string identifier = getStringFromLuaState(L, 2);
+	int priority = luaL_checknumber(L, 3);
+
+	auto hudWindow = HudWindowRegistry::Singleton->get(handle);
+
+	hudWindow->addWidget(identifier, priority, new ButtonWidget());
+
+	return 0;
+}
+
+
 template<typename T>
 std::optional<T*> doWidgetAction(lua_State* L) {
 	static_assert(std::is_base_of<Widget, T>::value, "T must be a derived class of Widget");
@@ -526,6 +539,28 @@ std::optional<T*> doWidgetAction(lua_State* L) {
 	return widget.value();
 }
 
+static int setButtonOnClick(lua_State* L) {
+	auto widget = doWidgetAction<ButtonWidget>(L);
+	std::string* callback = new std::string(getStringFromLuaState(L, 3));
+
+	if (!widget.has_value()) {
+		return 0;
+	}
+
+	widget.value()->onClick([callback]() {
+		HudWindowRegistry::Singleton->get(HudWindowRegistry::Singleton->curHandle)->addCallback(CallbackFunction{
+			.callbackPath = *callback,
+			.callbackSetup = [](lua_State* L) {},
+			.callbackCleanup = [callback](lua_State* L) {
+				delete callback;
+			}
+			});
+		});
+	lua_pushboolean(L, 1);
+
+	return 1;
+}
+
 
 static int setTextWidgetContent(lua_State* L) {
 	auto widget = doWidgetAction<TextWidget>(L);
@@ -541,9 +576,23 @@ static int setTextWidgetContent(lua_State* L) {
 	return 1;
 }
 
+static int setButtonWidgetLabel(lua_State* L) {
+	auto widget = doWidgetAction<ButtonWidget>(L);
+	std::string text = getStringFromLuaState(L, 3);
+
+	if (!widget.has_value()) {
+		return 0;
+	}
+
+	widget.value()->setText(text);
+	lua_pushboolean(L, 1);
+
+	return 1;
+}
+
 
 static int setWidgetX(lua_State* L) {
-	auto widget = doWidgetAction<TextWidget>(L);
+	auto widget = doWidgetAction<Widget>(L);
 	float x = luaL_checknumber(L, 3);
 
 	if (!widget.has_value()) {
@@ -557,7 +606,7 @@ static int setWidgetX(lua_State* L) {
 }
 
 static int setWidgetY(lua_State* L) {
-	auto widget = doWidgetAction<TextWidget>(L);
+	auto widget = doWidgetAction<Widget>(L);
 	float y = luaL_checknumber(L, 3);
 
 	if (!widget.has_value()) {
@@ -565,6 +614,34 @@ static int setWidgetY(lua_State* L) {
 	}
 
 	widget.value()->setPosY(y);
+	lua_pushboolean(L, 1);
+
+	return 1;
+}
+
+static int setWidgetWidth(lua_State* L) {
+	auto widget = doWidgetAction<TextWidget>(L);
+	float x = luaL_checknumber(L, 3);
+
+	if (!widget.has_value()) {
+		return 0;
+	}
+
+	widget.value()->setWidth(x);
+	lua_pushboolean(L, 1);
+
+	return 1;
+}
+
+static int setWidgetHeight(lua_State* L) {
+	auto widget = doWidgetAction<TextWidget>(L);
+	float y = luaL_checknumber(L, 3);
+
+	if (!widget.has_value()) {
+		return 0;
+	}
+
+	widget.value()->setHeight(y);
 	lua_pushboolean(L, 1);
 
 	return 1;
@@ -626,12 +703,18 @@ void InjectHudWinSL(lua_State* L) {
 
 	functionMap["addTextWidget"] = addTextWidget;
 	functionMap["setTextWidgetContent"] = setTextWidgetContent;
+	functionMap["setButtonWidgetLabel"] = setButtonWidgetLabel;
+
+	functionMap["addButtonWidget"] = addButtonWidget;
+	functionMap["setButtonOnClick"] = setButtonOnClick;
 
 
 	functionMap["setWidgetX"] = setWidgetX;
 	functionMap["setWidgetY"] = setWidgetY;
 	functionMap["getWidgetX"] = getWidgetX;
 	functionMap["getWidgetY"] = getWidgetY;
+	functionMap["setWidgetWidth"] = setWidgetWidth;
+	functionMap["setWidgetHeight"] = setWidgetHeight;
 
 
 	for (const auto& pair : functionMap) {

@@ -2,7 +2,7 @@
 #include "includes.hpp"
 
 class Widget {
-private:
+protected:
 	ImVec2 size;
 	ImVec2 position;
 public:
@@ -27,6 +27,23 @@ private:
 	std::string text = "";
 public:
 	void render();
+
+	void setText(std::string text);
+
+	std::string getText();
+
+};
+
+class ButtonWidget : public Widget {
+
+private:
+	std::function<void()> function;
+	std::string text = "";
+
+public:
+	void render();
+
+	void onClick(std::function<void()> function);
 
 	void setText(std::string text);
 

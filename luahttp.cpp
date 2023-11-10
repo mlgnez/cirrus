@@ -97,11 +97,11 @@ static int getResourceAt(lua_State* L) {
             httplib::Client client(url);
 
             auto result = client.Get(path);
-
-            std::string* body = new std::string(result.value().body);
+            
 
 
             if (result.error() == httplib::Error::Success) {
+                std::string* body = new std::string(result.value().body);
                 HudWindowRegistry::Singleton->get(handle)->addCallback(CallbackFunction{ .callbackPath = callbackPath, .callbackSetup = [body](lua_State* L) {
                     lua_pushstring(L, body->c_str());
                     lua_setglobal(L, "response");
