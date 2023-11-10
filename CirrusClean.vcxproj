@@ -160,6 +160,7 @@
     <ClInclude Include="imstb_textedit.h" />
     <ClInclude Include="imstb_truetype.h" />
     <ClInclude Include="includes.hpp" />
+    <ClInclude Include="json.h" />
     <ClInclude Include="luahttp.hpp" />
     <ClInclude Include="LuaSL.hpp" />
     <ClInclude Include="TimeKeeper.hpp" />

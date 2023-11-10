@@ -6,6 +6,7 @@
 #include "imgui_impl_dx10.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
+#include "json.h"
 #include <mutex>
 #include <filesystem>
 #include <d3d10_1.h>
@@ -30,6 +31,7 @@ extern "C" {
 }
 #include "luahttp.hpp"
 
+using json = nlohmann::json;
 namespace fs = std::filesystem;
 
 inline std::string getStringFromLuaState(lua_State* L, int stackIdx) {
