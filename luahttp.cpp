@@ -125,10 +125,57 @@ static int getResourceAt(lua_State* L) {
     return 0;
 }
 
+// thanks chatgpt!
+void json_to_lua_table(lua_State* L, const nlohmann::json& j) {
+    if (j.is_object()) {
+        lua_newtable(L); // Create a new table on the Lua stack
+        for (auto& el : j.items()) {
+            lua_pushstring(L, el.key().c_str()); // Push the key
+            json_to_lua_table(L, el.value()); // Recursively process the value
+            lua_settable(L, -3); // Set the key-value pair in the table
+        }
+    }
+    else if (j.is_array()) {
+        lua_newtable(L); // Create a new table on the Lua stack
+        int index = 1;
+        for (const auto& el : j) {
+            lua_pushnumber(L, index); // Push the index
+            json_to_lua_table(L, el); // Recursively process the value
+            lua_settable(L, -3); // Set the key-value pair in the table
+            index++;
+        }
+    }
+    else if (j.is_string()) {
+        lua_pushstring(L, j.get<std::string>().c_str()); // Push a string
+    }
+    else if (j.is_number_integer()) {
+        lua_pushinteger(L, j.get<int>()); // Push an integer
+    }
+    else if (j.is_number()) {
+        lua_pushnumber(L, j.get<double>()); // Push a number
+    }
+    else if (j.is_boolean()) {
+        lua_pushboolean(L, j.get<bool>()); // Push a boolean
+    }
+    else if (j.is_null()) {
+        lua_pushnil(L); // Push nil
+    }
+}
+
+int jsonParse(lua_State* L) {
+    std::string json = getStringFromLuaState(L, 1);
+
+    json_to_lua_table(L, json::parse(json));
+
+    return 1;
+}
+
+
 void IncludeLuaHttp(lua_State* L) {
     std::unordered_map<std::string, LuaCFunction> functionMap;
     
     functionMap["getResourceAt"] = getResourceAt;
+    functionMap["jsonParse"] = jsonParse;
 
     std::thread([]() {
         std::cout << "Hello, World!" << std::endl;

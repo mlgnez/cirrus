@@ -142,8 +142,15 @@ function getWidgetY(handle, identifier) end
 function getDeltaTime() end
 
 
+-- HTTP API
+
 -- Gets the time between the last frame
 ---@param url string The base URL of the resource
 ---@param path string The path the resource is located at
 ---@param callback string a callback function
 function getResourceAt(url, path, callback) end
+
+-- Parses from a JSON string into a lua table
+---@param json string JSON String
+---@return table string A table that represents the JSON string
+function jsonParse(json) end

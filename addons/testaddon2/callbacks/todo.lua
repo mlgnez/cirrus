@@ -2,4 +2,18 @@ Handle = getCurrentHandle()
 
 local textIdent = "testText"
 
-setTextWidgetContent(Handle, textIdent, response)
+local json = jsonParse(response)
+
+
+
+
+
+
+
+
+
+
+
+
+
+setTextWidgetContent(Handle, textIdent, "title: " .. json.title)

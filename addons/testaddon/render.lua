@@ -12,9 +12,8 @@ if xdirection ~= nil then
     if x >= width or x <= 0 then
         xdirection = -xdirection
         setWidgetX(Handle, i, width)
-        print("bounce!")
     end
-    
+
     local clampedX = clamp(x + xdirection * getDeltaTime(), 0, width)
 
     setWidgetX(Handle, i, clampedX)
@@ -27,9 +26,8 @@ if ydirection ~= nil then
     if y >= height or y <= 0 then
         ydirection = -ydirection
         setWidgetY(Handle, i, width)
-        print("bounce!")
     end
-    
+
     local clampedY = clamp(y + ydirection * getDeltaTime(), 0, height)
 
     setWidgetY(Handle, i, clampedY)
