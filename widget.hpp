@@ -6,7 +6,7 @@ private:
 	ImVec2 size;
 	ImVec2 position;
 public:
-	void render(); //only call when going through element list (for future)
+	virtual void render(); //only call when going through element list (for future)
 
 	void setWidth(float width);
 	void setHeight(float height);
@@ -18,6 +18,7 @@ public:
 	float getPosX();
 	float getPosY();
 
+	ImVec2 getPos();
 };
 
 class TextWidget : public Widget {

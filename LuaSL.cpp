@@ -35,10 +35,21 @@ static int isOverlapping(lua_State* L) {
     return 1;
 }
 
+static int clamp(lua_State* L) {
+    double v = lua_tonumber(L, 1);
+    double i = lua_tonumber(L, 2);
+    double a = lua_tonumber(L, 3);
+
+    lua_pushnumber(L, std::max(i, std::min(v, a)));
+
+    return 1;
+}
+
 void IncludeLuaSL(lua_State* L) {
     std::unordered_map<std::string, LuaCFunction> functionMap;
 
     functionMap["isOverlapping"] = isOverlapping;
+    functionMap["clamp"] = clamp;
 
     for (const auto& pair : functionMap) {
         lua_register(L, pair.first.c_str(), pair.second);

@@ -1,6 +1,8 @@
 #pragma once
 #include <unordered_map>
 #include <Windows.h>
+#undef min
+#undef max
 
 class InputHelper {
 private:

@@ -17,6 +17,21 @@ HudWindow::HudWindow(HudWinScripts* lua) {
 	IncludeLuaSL(lua_state);
 }
 
+HudWindow::~HudWindow() {
+	delete scripts;
+	delete persistentData;
+	
+	for (auto const& pair : widgetList) {
+		for (Widget* widget : pair.second) {
+			delete widget;
+		}
+	}
+	widgetList.clear();
+
+	lua_close(lua_state);
+}
+
+
 void HudWindow::render() {
 	if (luaL_dostring(lua_state, scripts->prerender.c_str()) != LUA_OK) {
 		std::cerr << "Failed to prerender HudWindow:" << lua_tostring(lua_state, -1) << std::endl;
@@ -40,20 +55,12 @@ void HudWindow::render() {
 		std::cerr << "Failed to render HudWindow:" << lua_tostring(lua_state, -1) << std::endl;
 	}
 
-	//put list shit here
-
-	TextWidget* textTest = new TextWidget();
-	textTest->setPosX(0);
-	textTest->setPosY(0);
-
-	textTest->setHeight(250);
-	textTest->setWidth(250);
-
-	textTest->setText("w");
-
-	textTest->render();
-
-	delete textTest;
+	for (auto const& prioritygroup : widgetList) {
+		for (auto const& widget : prioritygroup.second) {
+			ImGui::SetCursorPos(widget->getPos());
+			widget->render();
+		}
+	}
 	
 	ImGui::SetWindowPos(pos);
 
@@ -82,6 +89,30 @@ void HudWindow::setHeight(float h) {
 		h = 0;
 	}
 	size.y = h;
+}
+
+void HudWindow::addWidget(std::string identifier, int renderPriority, Widget* widget) {
+	if (!widgetList.contains(renderPriority)) {
+		widgetList[renderPriority] = {};
+	}
+
+	widgetList[renderPriority].push_back(widget);
+	widgetIdentifiers[identifier] = widget;
+}
+
+template<typename T>
+std::optional<T*> HudWindow::getWidget(std::string identifier) {
+	static_assert(std::is_base_of<Widget, T>::value, "T must be a derived class of Widget");
+
+	Widget* widget = widgetIdentifiers[identifier];
+
+	T* derived = dynamic_cast<T*>(widget);
+
+	if (derived == nullptr) {
+		return {};
+	}
+
+	return derived;
 }
 //  };
 
@@ -136,7 +167,10 @@ void HudWindowRegistry::initLua() {
 		}
 	}
 
-	
+	for (const auto& addon : addons) {
+		delete addon;
+	}
+	addons.clear();
 
 	for (const auto& entry : fs::directory_iterator(path)) {
 		lua_State* L = luaL_newstate();
@@ -189,6 +223,11 @@ void HudWindowRegistry::initLua() {
 
 		addons.push_back(addon);
 	}
+
+	for (const auto& window : windows) {
+		delete window.second;
+	}
+	windows.clear();
 
 	for (const auto& addon : addons) {
 		registerWindow(addon->scripts);
@@ -390,6 +429,135 @@ static int setPersistentBoolean(lua_State* L) {
 	return 0;
 }
 
+static int getPersistentFloat(lua_State* L) {
+	int handle = luaL_checknumber(L, 1);
+	std::string name = getStringFromLuaState(L, 2);
+
+	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto data = HudWin->getPersistentData();
+
+	if (data->floatStorage.contains(name)) {
+		lua_pushnumber(L, data->floatStorage[name]);
+		return 1;
+	}
+
+	lua_pushnil(L);
+	return 1;
+}
+
+static int setPersistentFloat(lua_State* L) {
+	int handle = luaL_checknumber(L, 1);
+	std::string name = getStringFromLuaState(L, 2);
+	float pushdata = luaL_checknumber(L, 3);
+
+
+	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto data = HudWin->getPersistentData();
+
+	data->floatStorage[name] = pushdata;
+
+	return 0;
+}
+
+static int addTextWidget(lua_State* L) {
+	int handle = luaL_checknumber(L, 1);
+	std::string identifier = getStringFromLuaState(L, 2);
+	int priority = luaL_checknumber(L, 3);
+
+	auto hudWindow = HudWindowRegistry::Singleton->get(handle);
+
+	hudWindow->addWidget(identifier, priority, new TextWidget());
+
+	return 0;
+}
+
+template<typename T>
+std::optional<T*> doWidgetAction(lua_State* L) {
+	static_assert(std::is_base_of<Widget, T>::value, "T must be a derived class of Widget");
+	int handle = luaL_checknumber(L, 1);
+	std::string identifier = getStringFromLuaState(L, 2);
+
+	auto hudWindow = HudWindowRegistry::Singleton->get(handle);
+
+	std::optional<T*> widget = hudWindow->getWidget<T>(identifier);
+
+	if (!widget.has_value()) {
+		lua_pushboolean(L, 0);
+		return {};
+	}
+
+	return widget.value();
+}
+
+
+static int setTextWidgetContent(lua_State* L) {
+	auto widget = doWidgetAction<TextWidget>(L);
+	std::string text = getStringFromLuaState(L, 3);
+
+	if (!widget.has_value()) {
+		return 0;
+	}
+
+	widget.value()->setText(text);
+	lua_pushboolean(L, 1);
+
+	return 1;
+}
+
+
+static int setWidgetX(lua_State* L) {
+	auto widget = doWidgetAction<TextWidget>(L);
+	float x = luaL_checknumber(L, 3);
+
+	if (!widget.has_value()) {
+		return 0;
+	}
+
+	widget.value()->setPosX(x);
+	lua_pushboolean(L, 1);
+
+	return 1;
+}
+
+static int setWidgetY(lua_State* L) {
+	auto widget = doWidgetAction<TextWidget>(L);
+	float y = luaL_checknumber(L, 3);
+
+	if (!widget.has_value()) {
+		return 0;
+	}
+
+	widget.value()->setPosY(y);
+	lua_pushboolean(L, 1);
+
+	return 1;
+}
+
+static int getWidgetX(lua_State* L) {
+	auto widget = doWidgetAction<TextWidget>(L);
+
+	if (!widget.has_value()) {
+		return 0;
+	}
+
+	lua_pushnumber(L, widget.value()->getPosX());
+
+	return 1;
+}
+
+static int getWidgetY(lua_State* L) {
+	auto widget = doWidgetAction<TextWidget>(L);
+
+	if (!widget.has_value()) {
+		return 0;
+	}
+
+	lua_pushnumber(L, widget.value()->getPosY());
+
+
+	return 1;
+}
+
 // Inject Hud Window Standard Library
 void InjectHudWinSL(lua_State* L) {
 	std::unordered_map<std::string, LuaCFunction> functionMap;
@@ -398,18 +566,35 @@ void InjectHudWinSL(lua_State* L) {
 	functionMap["getCurrentHandle"] = getCurrentHandle;
 	functionMap["getWindowHandleFromString"] = getWindowHandleFromString;
 	functionMap["setHudWindowName"] = setHudWindowName;
+
 	functionMap["setWidth"] = setWidth;
 	functionMap["setHeight"] = setHeight;
 	functionMap["getWidth"] = getWidth;
 	functionMap["getHeight"] = getHeight;
+
+	// likely soon to be deprecated
 	functionMap["getX"] = getX;
 	functionMap["getY"] = getY;
 	functionMap["setX"] = setX;
 	functionMap["setY"] = setY;
+
 	functionMap["isKeyPressed"] = isKeyPressed;
-	functionMap["getDeltaTime"] = [](lua_State* L) { lua_pushnumber(L, HudWindowRegistry::Singleton->timekeeper->deltaTime); return 1; };
+
+	functionMap["getDeltaTime"] = [](lua_State* L) { lua_pushnumber(L, std::round(HudWindowRegistry::Singleton->timekeeper->deltaTime * 1000) / 1000); return 1; };
+
 	functionMap["setPersistentBoolean"] = setPersistentBoolean;
 	functionMap["getPersistentBoolean"] = getPersistentBoolean;
+	functionMap["setPersistentFloat"] = setPersistentFloat;
+	functionMap["getPersistentFloat"] = getPersistentFloat;
+
+	functionMap["addTextWidget"] = addTextWidget;
+	functionMap["setTextWidgetContent"] = setTextWidgetContent;
+
+
+	functionMap["setWidgetX"] = setWidgetX;
+	functionMap["setWidgetY"] = setWidgetY;
+	functionMap["getWidgetX"] = getWidgetX;
+	functionMap["getWidgetY"] = getWidgetY;
 
 
 	for (const auto& pair : functionMap) {

@@ -82,6 +82,53 @@ function getPersistentBoolean(handle, name) end
 ---@param pushdata boolean The value to set.
 function setPersistentBoolean(handle, name, pushdata) end
 
----Injects the HUD Window Standard Library into the Lua state.
----@param L userdata The current Lua state.
-function InjectHudWinSL(L) end
+---Gets a persistent floating point value.
+---@param handle number The handle of the HUD window.
+---@param name string The name of the boolean value.
+---@return number|nil data The value of the persistent float or nil if not found.
+function getPersistentFloat(handle, name) end
+
+---Sets a persistent floating point value.
+---@param handle number The handle of the HUD window.
+---@param name string The name of the float value.
+---@param pushdata number The value to set.
+function setPersistentFloat(handle, name, pushdata) end
+
+-- Adds a text widget to a specific HUD window
+---@param handle number The handle of the HUD window.
+---@param identifier string The desired identifier, must be unique
+---@param renderPriority number Lower number renders first, higher number renders last
+function addTextWidget(handle, identifier, renderPriority) end
+
+-- Modifies the text of a text widget
+---@param handle number The handle of the HUD window.
+---@param identifier string The desired identifier
+---@param content string The text
+---@return boolean success returns whether or not the action was successful
+function setTextWidgetContent(handle, identifier, content) end
+
+-- Sets the X position of a widget
+---@param handle number The handle of the HUD window.
+---@param identifier string The desired identifier
+---@param x number The text
+---@return boolean success returns whether or not the action was successful
+function setWidgetX(handle, identifier, x) end
+
+-- Sets the Y position of a widget
+---@param handle number The handle of the HUD window.
+---@param identifier string The desired identifier
+---@param y number The text
+---@return boolean success returns whether or not the action was successful
+function setWidgetY(handle, identifier, y) end
+
+-- Gets the X position of a widget
+---@param handle number The handle of the HUD window.
+---@param identifier string The desired identifier
+---@return number x retrieves X position
+function getWidgetX(handle, identifier) end
+
+-- Gets the Y position of a widget
+---@param handle number The handle of the HUD window.
+---@param identifier string The desired identifier
+---@return number y retrieves Y position
+function getWidgetY(handle, identifier) end

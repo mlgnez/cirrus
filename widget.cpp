@@ -28,6 +28,10 @@ float Widget::getPosY() {
 	return position.y;
 }
 
+ImVec2 Widget::getPos() {
+	return position;
+}
+
 void TextWidget::render() {
 	ImGui::Text(text.c_str());
 }

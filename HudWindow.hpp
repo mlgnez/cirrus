@@ -28,6 +28,7 @@ private:
 	ImVec2 size;
 	PersistentDataStore* persistentData;
 	std::unordered_map<int, std::vector<Widget*>> widgetList;
+	std::unordered_map<std::string, Widget*> widgetIdentifiers;
 public:
 	InputHelper* input;
 	std::string name;
@@ -36,6 +37,7 @@ public:
 	ImVec2 pos;
 
 	HudWindow(HudWinScripts* lua);
+	~HudWindow();
 
 	void render();
 
@@ -50,6 +52,11 @@ public:
 	inline ImVec2 getSize() { return size; }
 
 	inline PersistentDataStore* getPersistentData() { return persistentData; }
+
+	void addWidget(std::string identifier, int renderPriority, Widget* widget);
+
+	template <typename T>
+	std::optional<T*> getWidget(std::string identifier);
 };
 
 class Addon {

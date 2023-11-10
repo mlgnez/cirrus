@@ -15,6 +15,8 @@
 #include <optional>
 #include <fstream>
 #include <sstream>
+#include <type_traits>
+#include <algorithm>
 #include "Input.hpp"
 #include "TimeKeeper.hpp"
 extern "C" {
