@@ -26,7 +26,6 @@ int main(int argc, char* argv[])
         std::cout << "Received URL: " << url << std::endl;
 
         // Parse the URL as needed
-        // For example, extract 'af022dac1' from 'cirrus://af022dac1'
         std::string protocolPrefix = "cirrus://";
         if (url.substr(0, protocolPrefix.size()) == protocolPrefix) {
             std::string data = url.substr(protocolPrefix.size());
@@ -34,12 +33,75 @@ int main(int argc, char* argv[])
 
             httplib::Client cli("https://raw.githubusercontent.com");
 
-            auto res = cli.Get("/Rubyboat1207/cumulohost/main/" + data + "/.json");
+            auto res = cli.Get("/Rubyboat1207/cumulohost/main/" + data + "manifest.json");
+
+            std::cout << "cum" << std::endl;
 
             if (res && res->status == 200) {
-                
+                auto manifest = json::parse(res.value().body);
+
+                std::vector<std::string> files;
+
+                files.push_back("init.lua");
+                files.push_back("manifest.json");
+
+                if (manifest["useRender"]) {
+                    files.push_back("render.lua");
+                }
+
+                if (manifest["usePrerender"]) {
+                    files.push_back("prerender.lua");
+                }
+
+                auto callbacks = manifest["callbacks"];
+
+                for (auto& element : callbacks) {
+                    files.push_back("callbacks/" + element.get<std::string>() + ".lua");
+                }
+
+                std::string writeroot = "./addons/" + data + "/";
+
+                fs::create_directories(writeroot);
+
+                for (auto const& file : files) {
+                    auto fileRes = cli.Get("/Rubyboat1207/cumulohost/main/" + data + "/" + file);
+
+                    if (fileRes && res->status == 200) {
+                        std::string fullPath = writeroot + file;
+
+                        // Open a file stream in binary mode
+                        std::ofstream outFile(fullPath, std::ios::binary);
+
+                        // Check if the file stream is open
+                        if (outFile.is_open()) {
+                            // Write the response body to the file
+                            outFile.write(fileRes->body.data(), fileRes->body.size());
+
+                            // Close the file stream
+                            outFile.close();
+
+                            // Optionally, you can log success message
+                            std::cout << "Downloaded and saved: " << fullPath << std::endl;
+                        }
+                        else {
+                            // Log an error message if the file couldn't be opened
+                            std::cerr << "Failed to open file for writing: " << fullPath << std::endl;
+                        }
+                    }
+                    else {
+                        // Log an error message if the GET request failed
+                        std::cerr << "Failed to download file: " << file << std::endl;
+                    }
+                }
+
+            }
+            else {
+                std::cout << res->body << std::endl;
+                std::cout << res->status << std::endl;
+                std::cout << ("https://raw.githubusercontent.com/Rubyboat1207/cumulohost/main" + data + "/manifest.json") << std::endl;
             }
         }
+        std::cin.get();
         return 0;
     }
 
@@ -47,7 +109,7 @@ int main(int argc, char* argv[])
     
 
     ImGui_ImplWin32_EnableDpiAwareness();
-    WNDCLASSEX wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, _T("ImGui Standalone"), nullptr };
+    WNDCLASSEX wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, _T("Cirrus HUD Container"), nullptr };
     ::RegisterClassEx(&wc);
     const wchar_t CLASS_NAME[] = L"Cirrus HUD Container";
 
@@ -56,7 +118,7 @@ int main(int argc, char* argv[])
 
     GetWindowRect(hDesktop, &desktop);
 
-    HWND hwnd = CreateWindowEx(WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_LAYERED, CLASS_NAME, L"Imgui Standalone", WS_POPUP, 0, 0, desktop.right, desktop.bottom, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowEx(WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_LAYERED, CLASS_NAME, L"Cirrus HUD Container", WS_POPUP, 0, 0, desktop.right, desktop.bottom, NULL, NULL, wc.hInstance, NULL);
 
     COLORREF color = 0;
     BYTE alpha = 255;

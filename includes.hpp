@@ -7,6 +7,7 @@
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include "json.h"
+#include <fstream>
 #include <mutex>
 #include <filesystem>
 #include <d3d10_1.h>

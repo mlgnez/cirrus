@@ -118,8 +118,6 @@ static int getResourceAt(lua_State* L) {
         catch (httplib::Error err) {
             std::cerr << err << std::endl;
         }
-        
-
     }, url, path, callback_path, handle).detach();
 
     return 0;

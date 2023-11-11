@@ -230,14 +230,19 @@ void HudWindowRegistry::initLua() {
 
 		auto addon = new Addon();
 		addon->folderPath = path;
-		addon->version = version;
-		addon->identifier = ident;
-		addon->display_name = name;
+		addon->version = manifest["version"];
+		addon->identifier = manifest["identifier"];
+		addon->display_name = manifest["name"];
 
 		addon->scripts = new HudWinScripts();
 
-		addon->scripts->render = readFile(path + "/render.lua", true).value_or("");
-		addon->scripts->prerender = readFile(path + "/prerender.lua", true).value_or("");
+		if (manifest["useRender"]) {
+			addon->scripts->render = readFile(path + "/render.lua", true).value_or("");
+		}
+		if (manifest["usePrerender"]) {
+			addon->scripts->prerender = readFile(path + "/prerender.lua", true).value_or("");
+		}
+		// init is required
 		addon->scripts->init = readFile(path + "/init.lua").value_or("");
 
 		addons.push_back(addon);
@@ -533,9 +538,7 @@ static int setButtonOnClick(lua_State* L) {
 		HudWindowRegistry::Singleton->get(HudWindowRegistry::Singleton->curHandle)->addCallback(CallbackFunction{
 			.callbackPath = *callback,
 			.callbackSetup = [](lua_State* L) {},
-			.callbackCleanup = [callback](lua_State* L) {
-				delete callback;
-			}
+			.callbackCleanup = [callback](lua_State* L) { }
 			});
 		});
 	lua_pushboolean(L, 1);
