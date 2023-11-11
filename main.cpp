@@ -4,7 +4,7 @@
 // Data
 static ID3D10Device* g_pd3dDevice = nullptr;
 static IDXGISwapChain* g_pSwapChain = nullptr;
-static UINT                     g_ResizeWidth = 0, g_ResizeHeight = 0;
+static UINT g_ResizeWidth = 0, g_ResizeHeight = 0;
 static ID3D10RenderTargetView* g_mainRenderTargetView = nullptr;
 
 // Forward declarations of helper functions
@@ -15,7 +15,8 @@ void CleanupRenderTarget();
 void SetupCirrusLight();
 void SetupCirrusDark();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam);
+BOOL CALLBACK ReloadWindowEnumProc(HWND hWnd, LPARAM lParam);
+HudWindowRegistry* registry;
 
 // Main code
 int main(int argc, char* argv[])
@@ -23,85 +24,9 @@ int main(int argc, char* argv[])
     if (argc > 1) {
         // The URL should be in argv[1]
         std::string url = argv[1];
-        std::cout << "Received URL: " << url << std::endl;
-
-        // Parse the URL as needed
-        std::string protocolPrefix = "cirrus://";
-        if (url.substr(0, protocolPrefix.size()) == protocolPrefix) {
-            std::string data = url.substr(protocolPrefix.size());
-            std::cout << "Extracted data: " << data << std::endl;
-
-            httplib::Client cli("https://raw.githubusercontent.com");
-
-            auto res = cli.Get("/Rubyboat1207/cumulohost/main/" + data + "manifest.json");
-
-            std::cout << "cum" << std::endl;
-
-            if (res && res->status == 200) {
-                auto manifest = json::parse(res.value().body);
-
-                std::vector<std::string> files;
-
-                files.push_back("init.lua");
-                files.push_back("manifest.json");
-
-                if (manifest["useRender"]) {
-                    files.push_back("render.lua");
-                }
-
-                if (manifest["usePrerender"]) {
-                    files.push_back("prerender.lua");
-                }
-
-                auto callbacks = manifest["callbacks"];
-
-                for (auto& element : callbacks) {
-                    files.push_back("callbacks/" + element.get<std::string>() + ".lua");
-                }
-
-                std::string writeroot = "./addons/" + data + "/";
-
-                fs::create_directories(writeroot);
-
-                for (auto const& file : files) {
-                    auto fileRes = cli.Get("/Rubyboat1207/cumulohost/main/" + data + "/" + file);
-
-                    if (fileRes && res->status == 200) {
-                        std::string fullPath = writeroot + file;
-
-                        // Open a file stream in binary mode
-                        std::ofstream outFile(fullPath, std::ios::binary);
-
-                        // Check if the file stream is open
-                        if (outFile.is_open()) {
-                            // Write the response body to the file
-                            outFile.write(fileRes->body.data(), fileRes->body.size());
-
-                            // Close the file stream
-                            outFile.close();
-
-                            // Optionally, you can log success message
-                            std::cout << "Downloaded and saved: " << fullPath << std::endl;
-                        }
-                        else {
-                            // Log an error message if the file couldn't be opened
-                            std::cerr << "Failed to open file for writing: " << fullPath << std::endl;
-                        }
-                    }
-                    else {
-                        // Log an error message if the GET request failed
-                        std::cerr << "Failed to download file: " << file << std::endl;
-                    }
-                }
-
-            }
-            else {
-                std::cout << res->body << std::endl;
-                std::cout << res->status << std::endl;
-                std::cout << ("https://raw.githubusercontent.com/Rubyboat1207/cumulohost/main" + data + "/manifest.json") << std::endl;
-            }
-        }
-        std::cin.get();
+        manageURLProtocolRequest(url);
+        
+        EnumWindows(ReloadWindowEnumProc, 0);
         return 0;
     }
 
@@ -170,7 +95,7 @@ int main(int argc, char* argv[])
 
     InputHelper* input = new InputHelper();
     TimeKeeper* timeKeeper = new TimeKeeper();
-    HudWindowRegistry* registry = new HudWindowRegistry(input, exStyle, hwnd, timeKeeper);
+    registry = new HudWindowRegistry(input, exStyle, hwnd, timeKeeper);
 
     registry->initLua();
 
@@ -340,6 +265,9 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if (pCDS->cbData == 32) { // Check if the data size is 32 bytes
             char* message = (char*)pCDS->lpData;
             
+            if (std::string(message) == std::string("reload")) {
+                registry->initLua();
+            }
         }
         break;
     }
@@ -347,7 +275,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return ::DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
-BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam, char message[32]) {
+BOOL CALLBACK ReloadWindowEnumProc(HWND hWnd, LPARAM lParam) {
     const int length = GetWindowTextLength(hWnd) + 1;
     wchar_t* buffer = new wchar_t[length];
 
@@ -356,6 +284,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam, char message[32]) {
     // Check if the window title is "Cirrus HUD Container"
     if (std::wstring(buffer) == L"Cirrus HUD Container") {
         COPYDATASTRUCT cds;
+        char message[32] = "reload";
         cds.dwData = 1; // Can be anything
         cds.lpData = message;
         cds.cbData = 32; // Size of the message

@@ -105,7 +105,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>./libs/include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CumuloServer.cpp" />
     <ClCompile Include="HudWindow.cpp" />
     <ClCompile Include="imgui_demo.cpp" />
     <ClCompile Include="Input.hpp" />
@@ -149,6 +150,7 @@
     <ClCompile Include="widget.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CumuloServer.hpp" />
     <ClInclude Include="httplib.h" />
     <ClInclude Include="HudWindow.hpp" />
     <ClInclude Include="imconfig.h" />

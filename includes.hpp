@@ -22,6 +22,7 @@
 #include <sstream>
 #include <type_traits>
 #include <algorithm>
+#include <shlobj.h>
 #include "Input.hpp"
 #include "TimeKeeper.hpp"
 #include "UrlProtocolManager.h"
@@ -69,4 +70,21 @@ inline std::optional<std::string> readFile(std::string path, bool silent=false) 
 	file.close();
 
 	return std::make_optional(content);
+}
+
+inline std::string convert_str(const std::wstring& s) {
+	//not determinate how many bytes to place all wide characters.
+	std::string res(2 * s.size(), '\0');
+	while (1) {
+		size_t num_used_char = std::wcstombs(res.data(), s.data(), res.size());
+		if (num_used_char == (size_t)-1) {
+			//do your error handling.
+		}
+		else if (num_used_char < res.size()) {
+			res.resize(num_used_char);
+			break;
+		}
+		res.resize(2 * res.size());
+	}
+	return res;
 }

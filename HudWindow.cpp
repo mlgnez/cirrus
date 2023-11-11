@@ -195,12 +195,17 @@ void HudWindowRegistry::renderAll() {
 }
 
 void HudWindowRegistry::initLua() {
-	std::string path = "./addons";
+	std::string path = convert_str(getAppDataFolder()) + "/Cirrus/addons";
 
 	if (!fs::exists(path) || !fs::is_directory(path)) {
-		if (!fs::create_directory(path)) {
+		if (!fs::create_directory(convert_str(getAppDataFolder()) + "/cirrus")) {
 			std::cout << "addons directory could not be created..." << std::endl;
+		}else {
+			if (!fs::create_directory(path)) {
+				std::cout << "addons directory could not be created..." << std::endl;
+			}
 		}
+		
 	}
 
 	for (const auto& addon : addons) {
