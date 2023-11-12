@@ -1,5 +1,5 @@
 #include "includes.hpp"
-#include "HudWindow.hpp"
+#include "CumuloServer.hpp"
 
 // Data
 static ID3D10Device* g_pd3dDevice = nullptr;
@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
     }
 
     init_url_protocol();
+    initCumuloServer();
     
 
     ImGui_ImplWin32_EnableDpiAwareness();
@@ -174,6 +175,7 @@ int main(int argc, char* argv[])
     CleanupDeviceD3D();
     ::DestroyWindow(hwnd);
     ::UnregisterClassW(wc.lpszClassName, wc.hInstance);
+    endCumuloServer();
 
     return 0;
 }

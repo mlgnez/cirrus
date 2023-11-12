@@ -81,6 +81,13 @@ public:
 	std::string identifier;
 	std::string display_name;
 	std::string folderPath;
+
+	inline json serialize() {
+		return {
+			{"version", this->version},
+			{"identifier", this->identifier}
+		};
+	}
 };
 
 class HudWindowRegistry {
@@ -107,4 +114,5 @@ public:
 	HudWindow* get(int handle);
 	std::optional<int> gethandle(std::string name);
 	Addon* getAddonFromWindow(HudWindow* window);
+	inline std::vector<Addon*> getAddons() { return addons; }
 };

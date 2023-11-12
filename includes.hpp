@@ -26,6 +26,7 @@
 #include "Input.hpp"
 #include "TimeKeeper.hpp"
 #include "UrlProtocolManager.h"
+
 extern "C" {
 	#include <lua.h>
 	#include <lauxlib.h>

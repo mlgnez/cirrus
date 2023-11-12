@@ -150,6 +150,7 @@
     <ClCompile Include="widget.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="crow_all.h" />
     <ClInclude Include="CumuloServer.hpp" />
     <ClInclude Include="httplib.h" />
     <ClInclude Include="HudWindow.hpp" />
