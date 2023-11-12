@@ -1,4 +1,5 @@
 #include "LuaSL.hpp"
+#include "psapi.h"
 using LuaCFunction = int (*)(lua_State* L);
 
 
@@ -45,11 +46,75 @@ static int clamp(lua_State* L) {
     return 1;
 }
 
+static int getfocusedWindowName(lua_State* L) {
+    HWND hwnd = GetForegroundWindow();
+
+    int length = GetWindowTextLength(hwnd);
+    wchar_t* title = new wchar_t[length + 1];
+    GetWindowText(hwnd, title, length + 1);
+
+    lua_pushstring(L, convert_str(std::wstring(title)).c_str());
+
+    return 1;
+}
+
+static int getfocusedWindowFileName(lua_State* L) {
+    HWND hwnd = GetForegroundWindow();
+
+    DWORD procid;
+    GetWindowThreadProcessId(hwnd, &procid);
+
+    HANDLE processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, procid);
+    if (!processHandle) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+
+    char exePath[MAX_PATH];
+    if (GetModuleFileNameExA(processHandle, NULL, exePath, MAX_PATH) == 0) {
+        CloseHandle(processHandle);
+        lua_pushnil(L);
+        return 1;
+    }
+
+
+    lua_pushstring(L, std::string(exePath).c_str());
+
+    return 1;
+}
+
+static int getScreenWidth(lua_State* L) {
+    RECT desktop;
+    const HWND hDesktop = GetDesktopWindow();
+
+    GetWindowRect(hDesktop, &desktop);
+
+    lua_pushnumber(L, desktop.right);
+
+    return 1;
+}
+
+static int getScreenHeight(lua_State* L) {
+    RECT desktop;
+    const HWND hDesktop = GetDesktopWindow();
+
+    GetWindowRect(hDesktop, &desktop);
+
+    lua_pushnumber(L, desktop.bottom);
+
+    return 1;
+}
+
 void IncludeLuaSL(lua_State* L) {
     std::unordered_map<std::string, LuaCFunction> functionMap;
 
     functionMap["isOverlapping"] = isOverlapping;
+    functionMap["getfocusedWindowName"] = getfocusedWindowName;
+    functionMap["getfocusedWindowFileName"] = getfocusedWindowFileName;
     functionMap["clamp"] = clamp;
+    functionMap["getScreenWidth"] = getScreenWidth;
+    functionMap["getScreenHeight"] = getScreenHeight;
 
     for (const auto& pair : functionMap) {
         lua_register(L, pair.first.c_str(), pair.second);

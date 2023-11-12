@@ -5,6 +5,7 @@ class Widget {
 protected:
 	ImVec2 size;
 	ImVec2 position;
+	bool hidden;
 public:
 	virtual void render(); //only call when going through element list (for future)
 
@@ -12,6 +13,9 @@ public:
 	void setHeight(float height);
 	void setPosX(float x);
 	void setPosY(float y);
+
+	void setHidden(bool hidden);
+	bool isHidden();
 
 	float getWidth();
 	float getHeight();

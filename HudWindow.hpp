@@ -37,7 +37,7 @@ private:
 	std::unordered_map<std::string, Widget*> widgetIdentifiers;
 	std::vector<CallbackFunction> queuedCallbackRunners;
 	std::mutex callbackmutex;
-
+	int framesRendererd = 0;
 public:
 	InputHelper* input;
 	std::string name;
@@ -65,6 +65,8 @@ public:
 	void addWidget(std::string identifier, int renderPriority, Widget* widget);
 
 	void addCallback(CallbackFunction callbackfunc);
+	void savePersistentVariables();
+	void loadPersistentVariables();
 
 	inline bool scriptsEqual(HudWinScripts* scripts) {
 		return scripts == this->scripts;

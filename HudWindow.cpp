@@ -29,14 +29,19 @@ HudWindow::~HudWindow() {
 	widgetList.clear();
 
 	lua_close(lua_state);
+
 }
 
 
 void HudWindow::render() {
+	framesRendererd++;
 	if (luaL_dostring(lua_state, scripts->prerender.c_str()) != LUA_OK) {
 		std::cerr << "Failed to prerender HudWindow:" << lua_tostring(lua_state, -1) << std::endl;
 	}
 	
+	if (framesRendererd == 1) {
+		awake();
+	}
 
 	ImGui::SetNextWindowSize(size);
 
@@ -84,7 +89,11 @@ void HudWindow::render() {
 
 	for (auto const& prioritygroup : widgetList) {
 		for (auto const& widget : prioritygroup.second) {
+			if (widget->isHidden()) {
+				continue;
+			}
 			ImGui::SetCursorPos(widget->getPos());
+
 			widget->render();
 		}
 	}
@@ -95,6 +104,8 @@ void HudWindow::render() {
 }
 
 void HudWindow::awake() {
+	loadPersistentVariables();
+
 	if (luaL_dostring(lua_state, scripts->init.c_str()) != LUA_OK) {
 		std::cerr << "Failed to initialize HudWindow:" << lua_tostring(lua_state, -1) << std::endl;
 	}
@@ -151,6 +162,66 @@ void HudWindow::addCallback(CallbackFunction callbackfunc) {
 	callbackmutex.unlock();
 }
 
+void HudWindow::savePersistentVariables() {
+	json j;
+
+	for (auto& kv : persistentData->intStorage) {
+		j["intStorage"][kv.first] = kv.second;
+	}
+
+	for (auto& kv : persistentData->floatStorage) {
+		j["floatStorage"][kv.first] = kv.second;
+	}
+
+	for (auto& kv : persistentData->stringStorage) {
+		j["stringStorage"][kv.first] = kv.second;
+	}
+
+	for (auto& kv : persistentData->flagStorage) {
+		j["flagStorage"][kv.first] = kv.second;
+	}
+
+	std::string serializedData = j.dump();
+
+	std::string fullPath = HudWindowRegistry::Singleton->getAddonFromWindow(this)->folderPath + "/storage.json";
+
+	// Open a file stream in binary mode
+	std::ofstream outFile(fullPath, std::ios::binary);
+
+	outFile.write(serializedData.c_str(), serializedData.size());
+
+	outFile.close();
+}
+
+
+void HudWindow::loadPersistentVariables() {
+	std::string serializedData = readFile(HudWindowRegistry::Singleton->getAddonFromWindow(this)->folderPath + "/storage.json").value_or("{}");
+	json j = json::parse(serializedData);
+
+	if (j.contains("intStorage")) {
+		for (auto& kv : j["intStorage"].items()) {
+			persistentData->intStorage[kv.key()] = kv.value().get<int>();
+		}
+	}
+
+	if (j.contains("floatStorage")) {
+		for (auto& kv : j["floatStorage"].items()) {
+			persistentData->floatStorage[kv.key()] = kv.value().get<float>();
+		}
+	}
+
+	if (j.contains("stringStorage")) {
+		for (auto& kv : j["stringStorage"].items()) {
+			persistentData->stringStorage[kv.key()] = kv.value().get<std::string>();
+		}
+	}
+
+	if (j.contains("flagStorage")) {
+		for (auto& kv : j["flagStorage"].items()) {
+			persistentData->flagStorage[kv.key()] = kv.value().get<boolean>();
+		}
+	}
+}
 //  };
 
 HudWindowRegistry* HudWindowRegistry::Singleton = nullptr;
@@ -181,7 +252,6 @@ std::tuple<int, HudWindow*> HudWindowRegistry::registerWindow(HudWinScripts* lua
 	window->hwnd = hwnd;
 	window->input = input;
 
-	window->awake();
 	curHandle = -1;
 
 	return std::make_tuple(location, window);
@@ -207,6 +277,12 @@ void HudWindowRegistry::initLua() {
 		}
 		
 	}
+
+	for (const auto& window : windows) {
+		window.second->savePersistentVariables();
+		delete window.second;
+	}
+	windows.clear();
 
 	for (const auto& addon : addons) {
 		delete addon;
@@ -253,10 +329,7 @@ void HudWindowRegistry::initLua() {
 		addons.push_back(addon);
 	}
 
-	for (const auto& window : windows) {
-		delete window.second;
-	}
-	windows.clear();
+
 
 	for (const auto& addon : addons) {
 		registerWindow(addon->scripts);
@@ -444,6 +517,22 @@ static int getPersistentBoolean(lua_State* L) {
 	return 1;
 }
 
+static int persistentBooleanExists(lua_State* L) {
+	int handle = luaL_checknumber(L, 1);
+	std::string name = getStringFromLuaState(L, 2);
+
+	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto data = HudWin->getPersistentData();
+
+	if (data->flagStorage.contains(name)) {
+		lua_pushboolean(L, true);
+		return 1;
+	}
+
+	lua_pushboolean(L, false);
+	return 1;
+}
+
 static int setPersistentBoolean(lua_State* L) {
 	int handle = luaL_checknumber(L, 1);
 	std::string name = getStringFromLuaState(L, 2);
@@ -454,6 +543,52 @@ static int setPersistentBoolean(lua_State* L) {
 	auto data = HudWin->getPersistentData();
 
 	data->flagStorage[name] = pushdata;
+
+	return 0;
+}
+
+static int getPersistentString(lua_State* L) {
+	int handle = luaL_checknumber(L, 1);
+	std::string name = getStringFromLuaState(L, 2);
+
+	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto data = HudWin->getPersistentData();
+
+	if (data->stringStorage.contains(name)) {
+		lua_pushstring(L, data->stringStorage[name].c_str());
+		return 1;
+	}
+
+	lua_pushnil(L);
+	return 1;
+}
+
+static int persistentStringExists(lua_State* L) {
+	int handle = luaL_checknumber(L, 1);
+	std::string name = getStringFromLuaState(L, 2);
+
+	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto data = HudWin->getPersistentData();
+
+	if (data->stringStorage.contains(name)) {
+		lua_pushboolean(L, true);
+		return 1;
+	}
+
+	lua_pushboolean(L, false);
+	return 1;
+}
+
+static int setPersistentString(lua_State* L) {
+	int handle = luaL_checknumber(L, 1);
+	std::string name = getStringFromLuaState(L, 2);
+	std::string pushdata = getStringFromLuaState(L, 3);
+
+
+	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto data = HudWin->getPersistentData();
+
+	data->stringStorage[name] = pushdata;
 
 	return 0;
 }
@@ -471,6 +606,22 @@ static int getPersistentFloat(lua_State* L) {
 	}
 
 	lua_pushnil(L);
+	return 1;
+}
+
+static int persistentFloatExists(lua_State* L) {
+	int handle = luaL_checknumber(L, 1);
+	std::string name = getStringFromLuaState(L, 2);
+
+	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto data = HudWin->getPersistentData();
+
+	if (data->floatStorage.contains(name)) {
+		lua_pushboolean(L, true);
+		return 1;
+	}
+
+	lua_pushboolean(L, false);
 	return 1;
 }
 
@@ -662,6 +813,51 @@ static int getWidgetY(lua_State* L) {
 	return 1;
 }
 
+static int setWidgetHidden(lua_State* L) {
+	auto widget = doWidgetAction<Widget>(L);
+	bool hidden = lua_toboolean(L, 3);
+
+	if (!widget.has_value()) {
+		return 0;
+	}
+
+	widget.value()->setHidden(hidden);
+
+	return 0;
+}
+
+static int getWidgetHidden(lua_State* L) {
+	auto widget = doWidgetAction<Widget>(L);
+
+	if (!widget.has_value()) {
+		return 0;
+	}
+
+	lua_pushboolean(L, widget.value()->isHidden());
+
+	return 1;
+}
+
+static int calculateTextWidth(lua_State* L) {
+	std::string text = getStringFromLuaState(L, 1);
+
+	ImVec2 textSize = ImGui::CalcTextSize(text.c_str());
+
+	lua_pushnumber(L, textSize.x);
+
+	return 1;
+}
+
+static int calculateTextHeight(lua_State* L) {
+	std::string text = getStringFromLuaState(L, 1);
+
+	ImVec2 textSize = ImGui::CalcTextSize(text.c_str());
+
+	lua_pushnumber(L, textSize.y);
+
+	return 1;
+}
+
 // Inject Hud Window Standard Library
 void InjectHudWinSL(lua_State* L) {
 	std::unordered_map<std::string, LuaCFunction> functionMap;
@@ -687,9 +883,16 @@ void InjectHudWinSL(lua_State* L) {
 	functionMap["getDeltaTime"] = [](lua_State* L) { lua_pushnumber(L, std::round(HudWindowRegistry::Singleton->timekeeper->deltaTime * 1000) / 1000); return 1; };
 
 	functionMap["setPersistentBoolean"] = setPersistentBoolean;
+	functionMap["persistentBooleanExists"] = persistentBooleanExists;
 	functionMap["getPersistentBoolean"] = getPersistentBoolean;
+
 	functionMap["setPersistentFloat"] = setPersistentFloat;
+	functionMap["persistentFloatExists"] = persistentFloatExists;
 	functionMap["getPersistentFloat"] = getPersistentFloat;
+
+	functionMap["setPersistentString"] = setPersistentString;
+	functionMap["persistentStringExists"] = persistentStringExists;
+	functionMap["getPersistentString"] = getPersistentString;
 
 	functionMap["addTextWidget"] = addTextWidget;
 	functionMap["setTextWidgetContent"] = setTextWidgetContent;
@@ -705,6 +908,11 @@ void InjectHudWinSL(lua_State* L) {
 	functionMap["getWidgetY"] = getWidgetY;
 	functionMap["setWidgetWidth"] = setWidgetWidth;
 	functionMap["setWidgetHeight"] = setWidgetHeight;
+	functionMap["setWidgetHidden"] = setWidgetHidden;
+	functionMap["getWidgetHidden"] = getWidgetHidden;
+
+	functionMap["calculateTextWidth"] = calculateTextWidth;
+	functionMap["calculateTextHeight"] = calculateTextHeight;
 
 
 	for (const auto& pair : functionMap) {

@@ -15,6 +15,15 @@ void Widget::setPosY(float y) {
 	position.y = y;
 }
 
+void Widget::setHidden(bool hidden) {
+	this->hidden = hidden;
+}
+
+bool Widget::isHidden() {
+	return this->hidden;
+}
+
+
 float Widget::getWidth() {
 	return size.x;
 }
