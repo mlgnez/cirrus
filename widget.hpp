@@ -54,3 +54,20 @@ public:
 	std::string getText();
 
 };
+
+class CheckBoxWidget : public Widget {
+
+private:
+	bool* boolean = false;
+	std::string text = "";
+
+public:
+	void render();
+
+	void onClick(bool* boolean);
+
+	void setText(std::string text);
+
+	std::string getText();
+
+};
