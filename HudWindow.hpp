@@ -9,7 +9,7 @@ struct HudWinScripts {
 	std::string init;
 };
 
-class HudWindowRegistry;
+class HudWindowManager;
 
 // Dictionary<int, List<Elements>> priorityQueue;
 
@@ -29,7 +29,7 @@ struct CallbackFunction {
 class HudWindow {
 private:
 	HudWinScripts* scripts;
-	HudWindowRegistry* registry;
+	HudWindowManager* registry;
 	lua_State* lua_state;
 	ImVec2 size;
 	PersistentDataStore* persistentData;
@@ -52,7 +52,7 @@ public:
 
 	void awake();
 
-	void setRegistry(HudWindowRegistry* registry);
+	void setRegistry(HudWindowManager* registry);
 
 	void setWidth(float w);
 
@@ -92,20 +92,21 @@ public:
 	}
 };
 
-class HudWindowRegistry {
+class HudWindowManager {
 private:
 	std::unordered_map<int, HudWindow*> windows;
 	std::vector<Addon*> addons;
 public:
 	int curHandle;
-	static HudWindowRegistry* Singleton;
+	static HudWindowManager* Singleton;
 	bool isSingletonInstance = false;
 	LONG_PTR exStyle;
 	HWND hwnd;
 	InputHelper* input;
 	TimeKeeper* timekeeper;
+	bool scaredMode;
 
-	HudWindowRegistry(InputHelper* input, LONG_PTR exStyle, HWND hwnd, TimeKeeper* timekeeper);
+	HudWindowManager(InputHelper* input, LONG_PTR exStyle, HWND hwnd, TimeKeeper* timekeeper);
 
 	std::tuple<int, HudWindow*> registerWindow(HudWinScripts* lua);
 

@@ -10,7 +10,7 @@ static std::future<void> runner;
 void initCumuloServer() {
 
 	CROW_ROUTE(app, "/addonList")([]() {
-		auto addons = HudWindowRegistry::Singleton->getAddons();
+		auto addons = HudWindowManager::Singleton->getAddons();
 
 		std::vector<json> strs;
 

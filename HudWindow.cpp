@@ -43,14 +43,18 @@ void HudWindow::render() {
 		awake();
 	}
 
+	
+
 	ImGui::SetNextWindowSize(size);
 
 	ImGui::Begin(name.c_str(), NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
+	
+
 	if (queuedCallbackRunners.size() > 0) {
 		callbackmutex.lock();
 
-		Addon* addon = HudWindowRegistry::Singleton->getAddonFromWindow(this);
+		Addon* addon = HudWindowManager::Singleton->getAddonFromWindow(this);
 
 		for (auto const& callbacks : queuedCallbackRunners) {
 			auto path = addon->folderPath + "/callbacks/" + callbacks.callbackPath + ".lua";
@@ -111,7 +115,7 @@ void HudWindow::awake() {
 	}
 }
 
-void HudWindow::setRegistry(HudWindowRegistry* registry) {
+void HudWindow::setRegistry(HudWindowManager* registry) {
 	this->registry = registry;
 }
 
@@ -183,7 +187,7 @@ void HudWindow::savePersistentVariables() {
 
 	std::string serializedData = j.dump();
 
-	std::string fullPath = HudWindowRegistry::Singleton->getAddonFromWindow(this)->folderPath + "/storage.json";
+	std::string fullPath = HudWindowManager::Singleton->getAddonFromWindow(this)->folderPath + "/storage.json";
 
 	// Open a file stream in binary mode
 	std::ofstream outFile(fullPath, std::ios::binary);
@@ -195,7 +199,7 @@ void HudWindow::savePersistentVariables() {
 
 
 void HudWindow::loadPersistentVariables() {
-	std::string serializedData = readFile(HudWindowRegistry::Singleton->getAddonFromWindow(this)->folderPath + "/storage.json").value_or("{}");
+	std::string serializedData = readFile(HudWindowManager::Singleton->getAddonFromWindow(this)->folderPath + "/storage.json").value_or("{}");
 	json j = json::parse(serializedData);
 
 	if (j.contains("intStorage")) {
@@ -224,24 +228,24 @@ void HudWindow::loadPersistentVariables() {
 }
 //  };
 
-HudWindowRegistry* HudWindowRegistry::Singleton = nullptr;
+HudWindowManager* HudWindowManager::Singleton = nullptr;
 
 
 // class HudWindowRegistry {
-HudWindowRegistry::HudWindowRegistry(InputHelper* input, LONG_PTR exStyle, HWND hwnd, TimeKeeper* timekeeper) {
+HudWindowManager::HudWindowManager(InputHelper* input, LONG_PTR exStyle, HWND hwnd, TimeKeeper* timekeeper) {
 	this->input = input;
 	this->exStyle = exStyle;
 	this->hwnd = hwnd;
 	this->timekeeper = timekeeper;
 	curHandle = -1;
-	if (HudWindowRegistry::Singleton == nullptr) {
+	if (HudWindowManager::Singleton == nullptr) {
 		isSingletonInstance = true;
-		HudWindowRegistry::Singleton = this;
+		HudWindowManager::Singleton = this;
 		return;
 	}
 }
 
-std::tuple<int, HudWindow*> HudWindowRegistry::registerWindow(HudWinScripts* lua) {
+std::tuple<int, HudWindow*> HudWindowManager::registerWindow(HudWinScripts* lua) {
 	auto window = new HudWindow(lua);
 
 	int location = windows.size();
@@ -257,14 +261,37 @@ std::tuple<int, HudWindow*> HudWindowRegistry::registerWindow(HudWinScripts* lua
 	return std::make_tuple(location, window);
 }
 
-void HudWindowRegistry::renderAll() {
+void HudWindowManager::renderAll() {
+
+	float transparency = 1;
+
 	for (const auto& pair : windows) {
+		auto window = pair.second;
+
+		if (scaredMode) {
+			ImVec2 center = ImVec2{ window->pos.x + window->getSize().x / 2, window->pos.y + window->getSize().y / 2 };
+
+			float maxDist = std::sqrtf(std::powf(center.x - window->pos.x, 2) + std::powf(center.y - window->pos.y, 2));
+			maxDist *= 1.2f;
+
+			POINT point;
+			GetCursorPos(&point); // Get the position in screen coordinates
+			ScreenToClient(hwnd, &point); // Convert to window coordinates
+
+			long distance = std::sqrtl(std::powl(point.x - center.x, 2) + std::powl(point.y - center.y, 2));
+
+			transparency = std::min(std::powf(std::clamp(distance / maxDist, 0.f, 1.f), 2), transparency);
+		}
 		curHandle = pair.first;
 		pair.second->render();
 	}
+
+	COLORREF color = 0;
+	BYTE alpha = std::floorf(transparency * 255);
+	SetLayeredWindowAttributes(hwnd, color, alpha, LWA_ALPHA);
 }
 
-void HudWindowRegistry::initLua() {
+void HudWindowManager::initLua() {
 	std::string path = convert_str(getAppDataFolder()) + "/Cirrus/addons";
 
 	if (!fs::exists(path) || !fs::is_directory(path)) {
@@ -336,7 +363,7 @@ void HudWindowRegistry::initLua() {
 	}
 }
 
-HudWindow* HudWindowRegistry::get(int handle) {
+HudWindow* HudWindowManager::get(int handle) {
 	return windows[handle];
 }
 
@@ -350,7 +377,7 @@ bool iequals(std::string& a, std::string& b) {
 	return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(), ichar_equals);
 }
 
-std::optional<int> HudWindowRegistry::gethandle(std::string name) {
+std::optional<int> HudWindowManager::gethandle(std::string name) {
 	std::mutex m;
 
 	m.lock();
@@ -365,7 +392,7 @@ std::optional<int> HudWindowRegistry::gethandle(std::string name) {
 	return {};
 }
 
-Addon* HudWindowRegistry::getAddonFromWindow(HudWindow* window) {
+Addon* HudWindowManager::getAddonFromWindow(HudWindow* window) {
 	for (auto const& addon : addons) {
 		if (window->scriptsEqual(addon->scripts)) {
 			return addon;
@@ -377,7 +404,7 @@ Addon* HudWindowRegistry::getAddonFromWindow(HudWindow* window) {
 // };
 
 static int getCurrentHandle(lua_State* L) {
-	lua_pushinteger(L, HudWindowRegistry::Singleton->curHandle);
+	lua_pushinteger(L, HudWindowManager::Singleton->curHandle);
 
 	return 1;
 }
@@ -393,7 +420,7 @@ static int setHudWindowName(lua_State* L) {
 	}
 	
 
-	HudWindowRegistry::Singleton->get(handle)->name = name;
+	HudWindowManager::Singleton->get(handle)->name = name;
 
 	return 0;
 }
@@ -401,7 +428,7 @@ static int setHudWindowName(lua_State* L) {
 static int setWidth(lua_State* L) {
 	int handle = luaL_checknumber(L, 1);
 	float width = luaL_checknumber(L, 2);
-	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto HudWin = HudWindowManager::Singleton->get(handle);
 
 	HudWin->setWidth(width);
 
@@ -411,7 +438,7 @@ static int setWidth(lua_State* L) {
 static int setHeight(lua_State* L) {
 	int handle = luaL_checknumber(L, 1);
 	float height = luaL_checknumber(L, 2);
-	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto HudWin = HudWindowManager::Singleton->get(handle);
 
 	HudWin->setHeight(height);
 
@@ -420,7 +447,7 @@ static int setHeight(lua_State* L) {
 
 static int getWidth(lua_State* L) {
 	int handle = luaL_checknumber(L, 1);
-	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto HudWin = HudWindowManager::Singleton->get(handle);
 
 	lua_pushnumber(L, HudWin->getSize().x);
 
@@ -429,7 +456,7 @@ static int getWidth(lua_State* L) {
 
 static int getHeight(lua_State* L) {
 	int handle = luaL_checknumber(L, 1);
-	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto HudWin = HudWindowManager::Singleton->get(handle);
 
 	lua_pushnumber(L, HudWin->getSize().y);
 
@@ -438,7 +465,7 @@ static int getHeight(lua_State* L) {
 
 static int getX(lua_State* L) {
 	int handle = luaL_checknumber(L, 1);
-	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto HudWin = HudWindowManager::Singleton->get(handle);
 
 	lua_pushnumber(L, HudWin->pos.x);
 
@@ -447,7 +474,7 @@ static int getX(lua_State* L) {
 
 static int getY(lua_State* L) {
 	int handle = luaL_checknumber(L, 1);
-	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto HudWin = HudWindowManager::Singleton->get(handle);
 
 	lua_pushnumber(L, HudWin->pos.y);
 
@@ -458,7 +485,7 @@ static int setX(lua_State* L) {
 	int handle = luaL_checknumber(L, 1);
 	float x = luaL_checknumber(L, 2);
 
-	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto HudWin = HudWindowManager::Singleton->get(handle);
 
 	HudWin->pos.x = x;
 
@@ -469,7 +496,7 @@ static int setY(lua_State* L) {
 	int handle = luaL_checknumber(L, 1);
 	float y = luaL_checknumber(L, 2);
 
-	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto HudWin = HudWindowManager::Singleton->get(handle);
 
 	HudWin->pos.y = y;
 
@@ -479,7 +506,7 @@ static int setY(lua_State* L) {
 static int isKeyPressed(lua_State* L) {
 	int keyCode = luaL_checknumber(L, 1);
 
-	auto input = HudWindowRegistry::Singleton->input;
+	auto input = HudWindowManager::Singleton->input;
 
 	lua_pushboolean(L, input->isKeyPressed(keyCode));
 
@@ -489,7 +516,7 @@ static int isKeyPressed(lua_State* L) {
 static int getWindowHandleFromString(lua_State* L) {
 	std::string name = getStringFromLuaState(L, 1);
 
-	auto handle = HudWindowRegistry::Singleton->gethandle(name);
+	auto handle = HudWindowManager::Singleton->gethandle(name);
 
 	if (handle.has_value()) {
 		lua_pushinteger(L, handle.value());
@@ -505,7 +532,7 @@ static int getPersistentBoolean(lua_State* L) {
 	int handle = luaL_checknumber(L, 1);
 	std::string name = getStringFromLuaState(L, 2);
 
-	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto HudWin = HudWindowManager::Singleton->get(handle);
 	auto data = HudWin->getPersistentData();
 
 	if (data->flagStorage.contains(name)) {
@@ -521,7 +548,7 @@ static int persistentBooleanExists(lua_State* L) {
 	int handle = luaL_checknumber(L, 1);
 	std::string name = getStringFromLuaState(L, 2);
 
-	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto HudWin = HudWindowManager::Singleton->get(handle);
 	auto data = HudWin->getPersistentData();
 
 	if (data->flagStorage.contains(name)) {
@@ -539,7 +566,7 @@ static int setPersistentBoolean(lua_State* L) {
 	bool pushdata = lua_toboolean(L, 3);
 
 
-	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto HudWin = HudWindowManager::Singleton->get(handle);
 	auto data = HudWin->getPersistentData();
 
 	data->flagStorage[name] = pushdata;
@@ -551,7 +578,7 @@ static int getPersistentString(lua_State* L) {
 	int handle = luaL_checknumber(L, 1);
 	std::string name = getStringFromLuaState(L, 2);
 
-	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto HudWin = HudWindowManager::Singleton->get(handle);
 	auto data = HudWin->getPersistentData();
 
 	if (data->stringStorage.contains(name)) {
@@ -567,7 +594,7 @@ static int persistentStringExists(lua_State* L) {
 	int handle = luaL_checknumber(L, 1);
 	std::string name = getStringFromLuaState(L, 2);
 
-	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto HudWin = HudWindowManager::Singleton->get(handle);
 	auto data = HudWin->getPersistentData();
 
 	if (data->stringStorage.contains(name)) {
@@ -585,7 +612,7 @@ static int setPersistentString(lua_State* L) {
 	std::string pushdata = getStringFromLuaState(L, 3);
 
 
-	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto HudWin = HudWindowManager::Singleton->get(handle);
 	auto data = HudWin->getPersistentData();
 
 	data->stringStorage[name] = pushdata;
@@ -597,7 +624,7 @@ static int getPersistentFloat(lua_State* L) {
 	int handle = luaL_checknumber(L, 1);
 	std::string name = getStringFromLuaState(L, 2);
 
-	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto HudWin = HudWindowManager::Singleton->get(handle);
 	auto data = HudWin->getPersistentData();
 
 	if (data->floatStorage.contains(name)) {
@@ -613,7 +640,7 @@ static int persistentFloatExists(lua_State* L) {
 	int handle = luaL_checknumber(L, 1);
 	std::string name = getStringFromLuaState(L, 2);
 
-	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto HudWin = HudWindowManager::Singleton->get(handle);
 	auto data = HudWin->getPersistentData();
 
 	if (data->floatStorage.contains(name)) {
@@ -631,7 +658,7 @@ static int setPersistentFloat(lua_State* L) {
 	float pushdata = luaL_checknumber(L, 3);
 
 
-	auto HudWin = HudWindowRegistry::Singleton->get(handle);
+	auto HudWin = HudWindowManager::Singleton->get(handle);
 	auto data = HudWin->getPersistentData();
 
 	data->floatStorage[name] = pushdata;
@@ -644,7 +671,7 @@ static int addTextWidget(lua_State* L) {
 	std::string identifier = getStringFromLuaState(L, 2);
 	int priority = luaL_checknumber(L, 3);
 
-	auto hudWindow = HudWindowRegistry::Singleton->get(handle);
+	auto hudWindow = HudWindowManager::Singleton->get(handle);
 
 	hudWindow->addWidget(identifier, priority, new TextWidget());
 
@@ -656,7 +683,7 @@ static int addButtonWidget(lua_State* L) {
 	std::string identifier = getStringFromLuaState(L, 2);
 	int priority = luaL_checknumber(L, 3);
 
-	auto hudWindow = HudWindowRegistry::Singleton->get(handle);
+	auto hudWindow = HudWindowManager::Singleton->get(handle);
 
 	hudWindow->addWidget(identifier, priority, new ButtonWidget());
 
@@ -670,7 +697,7 @@ std::optional<T*> doWidgetAction(lua_State* L) {
 	int handle = luaL_checknumber(L, 1);
 	std::string identifier = getStringFromLuaState(L, 2);
 
-	auto hudWindow = HudWindowRegistry::Singleton->get(handle);
+	auto hudWindow = HudWindowManager::Singleton->get(handle);
 
 	std::optional<T*> widget = hudWindow->getWidget<T>(identifier);
 
@@ -691,7 +718,7 @@ static int setButtonOnClick(lua_State* L) {
 	}
 
 	widget.value()->onClick([callback]() {
-		HudWindowRegistry::Singleton->get(HudWindowRegistry::Singleton->curHandle)->addCallback(CallbackFunction{
+		HudWindowManager::Singleton->get(HudWindowManager::Singleton->curHandle)->addCallback(CallbackFunction{
 			.callbackPath = *callback,
 			.callbackSetup = [](lua_State* L) {},
 			.callbackCleanup = [callback](lua_State* L) { }
@@ -880,7 +907,7 @@ void InjectHudWinSL(lua_State* L) {
 
 	functionMap["isKeyPressed"] = isKeyPressed;
 
-	functionMap["getDeltaTime"] = [](lua_State* L) { lua_pushnumber(L, std::round(HudWindowRegistry::Singleton->timekeeper->deltaTime * 1000) / 1000); return 1; };
+	functionMap["getDeltaTime"] = [](lua_State* L) { lua_pushnumber(L, std::round(HudWindowManager::Singleton->timekeeper->deltaTime * 1000) / 1000); return 1; };
 
 	functionMap["setPersistentBoolean"] = setPersistentBoolean;
 	functionMap["persistentBooleanExists"] = persistentBooleanExists;

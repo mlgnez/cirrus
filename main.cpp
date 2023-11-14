@@ -16,7 +16,7 @@ void SetupCirrusLight();
 void SetupCirrusDark();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK ReloadWindowEnumProc(HWND hWnd, LPARAM lParam);
-HudWindowRegistry* registry;
+HudWindowManager* registry;
 
 // Main code
 int main(int argc, char* argv[])
@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
 
     InputHelper* input = new InputHelper();
     TimeKeeper* timeKeeper = new TimeKeeper();
-    registry = new HudWindowRegistry(input, exStyle, hwnd, timeKeeper);
+    registry = new HudWindowManager(input, exStyle, hwnd, timeKeeper);
 
     registry->initLua();
 
@@ -152,6 +152,15 @@ int main(int argc, char* argv[])
             if (input->wasKeyPressed(0x52)) {
                 registry->initLua();
             }
+        }
+
+        if (input->isKeyPressed(VK_LMENU)) {
+            if (input->isKeyPressed(VK_CONTROL)) {
+                if (input->wasKeyPressed('H')) {
+                    registry->scaredMode = !registry->scaredMode;
+                }
+            }
+            
         }
         
 

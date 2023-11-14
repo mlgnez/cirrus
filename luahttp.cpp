@@ -6,7 +6,7 @@ static int getResourceAt(lua_State* L) {
     std::string path = getStringFromLuaState(L, 2);
     std::string callback_path = getStringFromLuaState(L, 3);
 
-    int handle = HudWindowRegistry::Singleton->curHandle;
+    int handle = HudWindowManager::Singleton->curHandle;
 
     // i dont know how to tell this story, so imma 4chan greentext it:
     /*
@@ -102,7 +102,7 @@ static int getResourceAt(lua_State* L) {
 
             if (result.error() == httplib::Error::Success) {
                 std::string* body = new std::string(result.value().body);
-                HudWindowRegistry::Singleton->get(handle)->addCallback(CallbackFunction{ .callbackPath = callbackPath, .callbackSetup = [body](lua_State* L) {
+                HudWindowManager::Singleton->get(handle)->addCallback(CallbackFunction{ .callbackPath = callbackPath, .callbackSetup = [body](lua_State* L) {
                     lua_pushstring(L, body->c_str());
                     lua_setglobal(L, "response");
 
