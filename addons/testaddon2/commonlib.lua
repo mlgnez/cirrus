@@ -153,6 +153,31 @@ function setPersistentString(handle, name, pushdata) end
 ---@param renderPriority number Lower number renders first, higher number renders last
 function addTextWidget(handle, identifier, renderPriority) end
 
+-- Adds a checkbox widget to a specific HUD window
+---@param handle number The handle of the HUD window.
+---@param identifier string The desired identifier, must be unique
+---@param renderPriority number Lower number renders first, higher number renders last
+function addCheckboxWidget(handle, identifier, renderPriority) end
+
+---Sets whether or not a checkbox is currently checked
+---@param handle number The handle of the HUD window.
+---@param name string The name of the String value.
+---@param checked boolean The value to set.
+function setCheckboxChecked(handle, name, checked) end
+
+---Sets whether or not a checkbox is currently checked
+---@param handle number The handle of the HUD window.
+---@param name string The name of the String value.
+---@return boolean checked whether or not this is checked
+function getCheckboxChecked(handle, name) end
+
+---Sets whether or not a checkbox is currently checked
+---@param handle number The handle of the HUD window.
+---@param name string The name of the String value.
+---@param label string The label of the checkbox
+---@return boolean checked whether or not this is checked
+function setCheckboxLabel(handle, name, label) end
+
 -- Modifies the text of a text widget
 ---@param handle number The handle of the HUD window.
 ---@param identifier string The desired identifier
@@ -227,8 +252,8 @@ function getWidgetHidden(handle, identifier) end
 -- Sets the visibility of a widget
 ---@param handle number The handle of the HUD window.
 ---@param identifier string The desired identifier
----@param visibility boolean The desired visibility
-function setWidgetHidden(handle, identifier, visibility) end
+---@param hidden boolean The desired visibility
+function setWidgetHidden(handle, identifier, hidden) end
 
 -- Gets the Width of a string of text once rendered
 ---@param text string Text to calculate width of

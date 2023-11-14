@@ -690,6 +690,18 @@ static int addButtonWidget(lua_State* L) {
 	return 0;
 }
 
+static int addCheckboxWidget(lua_State* L) {
+	int handle = luaL_checknumber(L, 1);
+	std::string identifier = getStringFromLuaState(L, 2);
+	int priority = luaL_checknumber(L, 3);
+
+	auto hudWindow = HudWindowManager::Singleton->get(handle);
+
+	hudWindow->addWidget(identifier, priority, new CheckBoxWidget());
+
+	return 0;
+}
+
 
 template<typename T>
 std::optional<T*> doWidgetAction(lua_State* L) {
@@ -740,6 +752,44 @@ static int setTextWidgetContent(lua_State* L) {
 
 	widget.value()->setText(text);
 	lua_pushboolean(L, 1);
+
+	return 1;
+}
+
+static int setCheckboxChecked(lua_State* L) {
+	auto widget = doWidgetAction<CheckBoxWidget>(L);
+	bool checked = lua_toboolean(L, 3);
+
+	if (!widget.has_value()) {
+		return 0;
+	}
+
+	widget.value()->setChecked(checked);
+
+	return 0;
+}
+
+static int setCheckboxLabel(lua_State* L) {
+	auto widget = doWidgetAction<CheckBoxWidget>(L);
+	std::string label = getStringFromLuaState(L, 3);
+
+	if (!widget.has_value()) {
+		return 0;
+	}
+
+	widget.value()->setText(label);
+
+	return 0;
+}
+
+static int getCheckboxChecked(lua_State* L) {
+	auto widget = doWidgetAction<CheckBoxWidget>(L);
+
+	if (!widget.has_value()) {
+		return 0;
+	}
+
+	lua_pushboolean(L, widget.value()->isChecked());
 
 	return 1;
 }
@@ -927,6 +977,12 @@ void InjectHudWinSL(lua_State* L) {
 
 	functionMap["addButtonWidget"] = addButtonWidget;
 	functionMap["setButtonOnClick"] = setButtonOnClick;
+
+
+	functionMap["addCheckboxWidget"] = addCheckboxWidget;
+	functionMap["setCheckboxChecked"] = setCheckboxChecked;
+	functionMap["getCheckboxChecked"] = getCheckboxChecked;
+	functionMap["setCheckboxLabel"] = setCheckboxLabel;
 
 
 	functionMap["setWidgetX"] = setWidgetX;

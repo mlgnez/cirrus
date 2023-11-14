@@ -79,23 +79,25 @@ std::string ButtonWidget::getText() {
 }
 
 void CheckBoxWidget::render() {
-
-	if (ImGui::Checkbox(this->text.c_str(), this->boolean)) {
-
-		*(this->boolean) = !*(this->boolean);
-
-	}
-
+	ImGui::Checkbox(this->text.c_str(), this->checked);
 }
 
 void CheckBoxWidget::onClick(bool* boolean) {
 
-	this->boolean = boolean;
+	this->checked = boolean;
 
 }
 
 void CheckBoxWidget::setText(std::string text) {
 	this->text = text;
+}
+
+void CheckBoxWidget::setChecked(bool checked) {
+	*this->checked = checked;
+}
+
+bool CheckBoxWidget::isChecked() {
+	return *this->checked;
 }
 
 std::string CheckBoxWidget::getText() {

@@ -58,10 +58,19 @@ public:
 class CheckBoxWidget : public Widget {
 
 private:
-	bool* boolean = false;
 	std::string text = "";
+	bool* checked;
 
 public:
+
+	inline CheckBoxWidget() {
+		checked = new bool(false);
+	}
+
+	inline ~CheckBoxWidget() {
+		delete checked;
+	}
+
 	void render();
 
 	void onClick(bool* boolean);
@@ -70,4 +79,6 @@ public:
 
 	std::string getText();
 
+	void setChecked(bool value);
+	bool isChecked();
 };
