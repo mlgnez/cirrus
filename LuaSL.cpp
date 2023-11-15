@@ -106,6 +106,8 @@ static int getScreenHeight(lua_State* L) {
     return 1;
 }
 
+
+
 void IncludeLuaSL(lua_State* L) {
     std::unordered_map<std::string, LuaCFunction> functionMap;
 

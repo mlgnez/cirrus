@@ -18,20 +18,21 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK ReloadWindowEnumProc(HWND hWnd, LPARAM lParam);
 HudWindowManager* registry;
 
+void hideConsole() {
+    HWND consoleWindow = GetConsoleWindow();
+    ShowWindow(consoleWindow, SW_HIDE);
+}
+
+void showConsole() {
+    HWND consoleWindow = GetConsoleWindow();
+    ShowWindow(consoleWindow, SW_SHOW);
+}
+
+
 // Main code
 int main(int argc, char* argv[])
 {
-    if (argc > 1) {
-        // The URL should be in argv[1]
-        std::string url = argv[1];
-        manageURLProtocolRequest(url);
-        
-        EnumWindows(ReloadWindowEnumProc, 0);
-        return 0;
-    }
-
-    init_url_protocol();
-    initCumuloServer();
+    hideConsole();
     
 
     ImGui_ImplWin32_EnableDpiAwareness();
@@ -87,13 +88,6 @@ int main(int argc, char* argv[])
 
     LONG_PTR exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
 
-    ImFont* customFont = io.Fonts->AddFontFromFileTTF("./K2D-Thin.ttf", 16.0f);
-
-    if (!customFont) {
-        std::cout << "no worky" << std::endl;
-        return -1;
-    }
-
     InputHelper* input = new InputHelper();
     TimeKeeper* timeKeeper = new TimeKeeper();
     registry = new HudWindowManager(input, exStyle, hwnd, timeKeeper);
@@ -101,8 +95,114 @@ int main(int argc, char* argv[])
     registry->initLua();
 
 
-    // Main loop
     bool done = false;
+    if (argc > 1) {
+        // The URL should be in argv[1]
+        std::string url = argv[1];
+
+        bool downloadSoftware = false;
+
+        // Alternate Main Loop
+        while (!done)
+        {
+            input->update();
+            SetForegroundWindow(hwnd);
+
+
+
+            MSG msg;
+            while (::PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
+            {
+                ::TranslateMessage(&msg);
+                ::DispatchMessage(&msg);
+                if (msg.message == WM_QUIT)
+                    done = true;
+            }
+            if (done)
+                break;
+
+            if (g_ResizeWidth != 0 && g_ResizeHeight != 0)
+            {
+                CleanupRenderTarget();
+                g_pSwapChain->ResizeBuffers(0, g_ResizeWidth, g_ResizeHeight, DXGI_FORMAT_UNKNOWN, 0);
+                g_ResizeWidth = g_ResizeHeight = 0;
+                CreateRenderTarget();
+            }
+
+            // Start the Dear ImGui frame
+            ImGui_ImplDX10_NewFrame();
+            ImGui_ImplWin32_NewFrame();
+            ImGui::NewFrame();
+
+            ImGui::Begin("Confirm?", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
+            if (ImGui::IsWindowHovered())
+            {
+                exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+                SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle & ~WS_EX_TRANSPARENT);
+            }
+            else {
+                exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+                SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle | WS_EX_TRANSPARENT);
+            }
+
+            ImGui::Text("Are you sure you want to download this addon?");
+
+            if (ImGui::Button("Yes")) {
+                downloadSoftware = true;
+                done = true;
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Cancel")) {
+                done = true;
+            }
+
+            ImGui::End();
+
+            ImGui::Render();
+            const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
+            g_pd3dDevice->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
+            g_pd3dDevice->ClearRenderTargetView(g_mainRenderTargetView, clear_color_with_alpha);
+            ImGui_ImplDX10_RenderDrawData(ImGui::GetDrawData());
+
+            g_pSwapChain->Present(1, 0);
+        }
+
+        delete registry;
+
+        ImGui_ImplDX10_Shutdown();
+        ImGui_ImplWin32_Shutdown();
+        ImGui::DestroyContext();
+
+        CleanupDeviceD3D();
+        ::DestroyWindow(hwnd);
+        ::UnregisterClassW(wc.lpszClassName, wc.hInstance);
+
+        showConsole();
+
+        manageURLProtocolRequest(url);
+
+
+
+        EnumWindows(ReloadWindowEnumProc, 0);
+
+        return 0;
+    }
+
+    ImFont* customFont = io.Fonts->AddFontFromFileTTF("./K2D-Thin.ttf", 16.0f);
+
+    if (!customFont) {
+        std::cout << "no worky" << std::endl;
+        return -1;
+    }
+
+    init_url_protocol();
+    initCumuloServer();
+
+
+    // Main loop
     while (!done)
     {
         input->update();
