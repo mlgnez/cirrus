@@ -32,6 +32,10 @@ HudWindow::~HudWindow() {
 
 }
 
+bool HudWindow::isCursorOverBox(int cursorX, int cursorY, int boxX, int boxY, int boxWidth, int boxHeight) {
+	return (cursorX >= boxX) && (cursorX <= boxX + boxWidth) && (cursorY >= boxY) && (cursorY <= boxY + boxHeight);
+}
+
 
 void HudWindow::render() {
 	framesRendererd++;
@@ -49,7 +53,13 @@ void HudWindow::render() {
 
 	ImGui::Begin(name.c_str(), NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-	
+	POINT point;
+	GetCursorPos(&point); // Get the position in screen coordinates
+	ScreenToClient(hwnd, &point); // Convert to window coordinates
+
+	if (isCursorOverBox(point.x, point.y, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y)) {
+		SetForegroundWindow(hwnd);
+	}
 
 	if (queuedCallbackRunners.size() > 0) {
 		callbackmutex.lock();

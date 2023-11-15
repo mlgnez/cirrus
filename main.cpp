@@ -100,7 +100,6 @@ int main(int argc, char* argv[])
 
     registry->initLua();
 
-
     // Main loop
     bool done = false;
     while (!done)
@@ -111,7 +110,6 @@ int main(int argc, char* argv[])
         if (foregroundWindow != hwnd) {
             SetActiveWindow(hwnd);
         }
-
 
 
         MSG msg;
@@ -162,7 +160,6 @@ int main(int argc, char* argv[])
             }
             
         }
-        
 
         // Rendering
         ImGui::Render();
