@@ -201,7 +201,6 @@ int main(int argc, char* argv[])
     init_url_protocol();
     initCumuloServer();
 
-
     // Main loop
     while (!done)
     {
@@ -211,7 +210,6 @@ int main(int argc, char* argv[])
         if (foregroundWindow != hwnd) {
             SetActiveWindow(hwnd);
         }
-
 
 
         MSG msg;
@@ -262,7 +260,6 @@ int main(int argc, char* argv[])
             }
             
         }
-        
 
         // Rendering
         ImGui::Render();

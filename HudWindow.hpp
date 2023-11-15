@@ -48,6 +48,8 @@ public:
 	HudWindow(HudWinScripts* lua);
 	~HudWindow();
 
+	bool isCursorOverBox(int cursorX, int cursorY, int boxX, int boxY, int boxWidth, int boxHeight);
+
 	void render();
 
 	void awake();
