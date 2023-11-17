@@ -50,7 +50,7 @@ public:
 
 	bool isCursorOverBox(int cursorX, int cursorY, int boxX, int boxY, int boxWidth, int boxHeight);
 
-	void render();
+	void render(bool slotMode);
 
 	void awake();
 
@@ -107,6 +107,7 @@ public:
 	InputHelper* input;
 	TimeKeeper* timekeeper;
 	bool scaredMode;
+	bool slotMode;
 
 	HudWindowManager(InputHelper* input, LONG_PTR exStyle, HWND hwnd, TimeKeeper* timekeeper);
 
