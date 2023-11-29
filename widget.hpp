@@ -82,3 +82,26 @@ public:
 	void setChecked(bool value);
 	bool isChecked();
 };
+
+class TextFieldWidget : public Widget {
+
+private:
+	std::string placeholder = "";
+	char* input;
+public:
+
+	inline TextFieldWidget(int bufSize) {
+		input = new char[bufSize];
+	}
+
+	inline ~TextFieldWidget() {
+		delete input;
+	}
+
+	void render();
+
+	void setPlaceholder(char* placeholderText);
+
+	char* getPlaceholder();
+
+};

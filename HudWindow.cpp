@@ -37,7 +37,7 @@ bool HudWindow::isCursorOverBox(int cursorX, int cursorY, int boxX, int boxY, in
 }
 
 
-void HudWindow::render() {
+void HudWindow::render(bool slotMode) {
 	framesRendererd++;
 	if (luaL_dostring(lua_state, scripts->prerender.c_str()) != LUA_OK) {
 		std::cerr << "Failed to prerender HudWindow:" << lua_tostring(lua_state, -1) << std::endl;
@@ -46,12 +46,11 @@ void HudWindow::render() {
 	if (framesRendererd == 1) {
 		awake();
 	}
-
 	
 
 	ImGui::SetNextWindowSize(size);
 
-	ImGui::Begin(name.c_str(), NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+	ImGui::Begin(name.c_str(), NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | (slotMode ? 0 : ImGuiWindowFlags_NoMove));
 
 	POINT point;
 	GetCursorPos(&point); // Get the position in screen coordinates
@@ -292,8 +291,10 @@ void HudWindowManager::renderAll() {
 
 			transparency = std::min(std::powf(std::clamp(distance / maxDist, 0.f, 1.f), 2), transparency);
 		}
-		curHandle = pair.first;
-		pair.second->render();
+
+			curHandle = pair.first;
+			pair.second->render(this->slotMode);
+		
 	}
 
 	COLORREF color = 0;

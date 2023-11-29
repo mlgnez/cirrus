@@ -93,6 +93,8 @@ int main(int argc, char* argv[])
     TimeKeeper* timeKeeper = new TimeKeeper();
     registry = new HudWindowManager(input, exStyle, hwnd, timeKeeper);
 
+    registry->slotMode = false;
+
     registry->initLua();
 
 
@@ -260,6 +262,15 @@ int main(int argc, char* argv[])
                 }
             }
             
+        }
+
+        if (input->isKeyPressed(VK_LMENU)) {
+            if (input->isKeyPressed(VK_CONTROL)) {
+                if (input->wasKeyPressed('S')) {
+                    registry->slotMode = !registry->slotMode;
+                }
+            }
+
         }
 
         // Rendering
