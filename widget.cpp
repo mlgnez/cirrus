@@ -103,3 +103,15 @@ bool CheckBoxWidget::isChecked() {
 std::string CheckBoxWidget::getText() {
 	return text;
 }
+
+void TextFieldWidget::render() {
+	ImGui::InputText(this->placeholder.c_str(), input, IM_ARRAYSIZE(input));
+}
+
+void TextFieldWidget::setPlaceholder(char* placeholderText) {
+	this->input = placeholderText;
+}
+
+char* TextFieldWidget::getPlaceholder() {
+	return this->input;
+}
