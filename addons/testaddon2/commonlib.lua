@@ -287,5 +287,10 @@ function postResourceAt(url, path, body, callback) end
 
 -- Parses from a JSON string into a lua table
 ---@param json string JSON String
----@return table string A table that represents the JSON string
+---@return table|nil string A table that represents the JSON string
 function jsonParse(json) end
+
+-- Turns a lua table into its json representation
+---@param table table JSON String
+---@return string json A json string that represents the table
+function jsonStringify(table) end
