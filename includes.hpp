@@ -39,14 +39,23 @@ namespace fs = std::filesystem;
 
 inline std::string getStringFromLuaState(lua_State* L, int stackIdx) {
 	if (!lua_isstring(L, stackIdx)) {
-		throw std::runtime_error("Stack variable is not a string at given index");
+		//  throw std::runtime_error("Stack variable is not a string at given index");
+		return "";
 	}
+	
+	try {
+		const char* cstr = lua_tostring(L, stackIdx);
 
-	const char* cstr = lua_tostring(L, stackIdx);
+		std::string cppstr(cstr);
 
-	std::string cppstr(cstr);
+		return cppstr;
+	}
+	catch (std::runtime_error err) {
+		std::cerr << err.what() << std::endl;
 
-	return cppstr;
+		return "";
+	}
+	
 }
 
 inline std::optional<std::string> readFile(std::string path, bool silent=false) {

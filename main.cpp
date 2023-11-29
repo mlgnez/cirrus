@@ -32,7 +32,8 @@ void showConsole() {
 // Main code
 int main(int argc, char* argv[])
 {
-    hideConsole();
+    // hideConsole();
+    showConsole();
     
 
     ImGui_ImplWin32_EnableDpiAwareness();
@@ -191,7 +192,7 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    ImFont* customFont = io.Fonts->AddFontFromFileTTF("./K2D-Thin.ttf", 16.0f);
+    ImFont* customFont = io.Fonts->AddFontFromFileTTF("./K2D-Thin.ttf", 20.0f);
 
     if (!customFont) {
         std::cout << "no worky" << std::endl;

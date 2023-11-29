@@ -57,7 +57,7 @@ void HudWindow::render() {
 	GetCursorPos(&point); // Get the position in screen coordinates
 	ScreenToClient(hwnd, &point); // Convert to window coordinates
 
-	if (isCursorOverBox(point.x, point.y, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y)) {
+	if (!HudWindowManager::Singleton->scaredMode && isCursorOverBox(point.x, point.y, ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowSize().x, ImGui::GetWindowSize().y)) {
 		SetForegroundWindow(hwnd);
 	}
 

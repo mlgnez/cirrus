@@ -278,6 +278,13 @@ function getDeltaTime() end
 ---@param callback string a callback function
 function getResourceAt(url, path, callback) end
 
+-- Gets the time between the last frame
+---@param url string The base URL of the resource
+---@param path string The path the resource is located at
+---@param body string JSON body
+---@param callback string a callback function
+function postResourceAt(url, path, body, callback) end
+
 -- Parses from a JSON string into a lua table
 ---@param json string JSON String
 ---@return table string A table that represents the JSON string
