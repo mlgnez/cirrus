@@ -105,13 +105,17 @@ std::string CheckBoxWidget::getText() {
 }
 
 void TextFieldWidget::render() {
-	ImGui::InputText(this->placeholder.c_str(), input, IM_ARRAYSIZE(input));
+	ImGui::InputText(this->placeholder.c_str(), input, buffer_size);
 }
 
-void TextFieldWidget::setPlaceholder(char* placeholderText) {
-	this->input = placeholderText;
+void TextFieldWidget::setPlaceholder(std::string placeholderText) {
+	this->placeholder = placeholderText;
 }
 
-char* TextFieldWidget::getPlaceholder() {
+char* TextFieldWidget::getInput() {
 	return this->input;
+}
+
+void TextFieldWidget::setInput(std::string replacement) {
+	strcpy_s(this->input, this->buffer_size, replacement.c_str());
 }

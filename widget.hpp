@@ -6,6 +6,7 @@ protected:
 	ImVec2 size;
 	ImVec2 position;
 	bool hidden;
+	std::string ident;
 public:
 	virtual void render(); //only call when going through element list (for future)
 
@@ -21,6 +22,10 @@ public:
 	float getHeight();
 	float getPosX();
 	float getPosY();
+
+	inline void setIdent(std::string ident) {
+		this->ident = ident;
+	}
 
 	ImVec2 getPos();
 };
@@ -88,20 +93,24 @@ class TextFieldWidget : public Widget {
 private:
 	std::string placeholder = "";
 	char* input;
+	int buffer_size;
 public:
 
 	inline TextFieldWidget(int bufSize) {
-		input = new char[bufSize];
+		buffer_size = bufSize;
+		input = new char[buffer_size];
+		memset(input, 0, buffer_size);
+
 	}
 
 	inline ~TextFieldWidget() {
-		delete input;
+		delete[] input;
 	}
 
 	void render();
 
-	void setPlaceholder(char* placeholderText);
+	void setPlaceholder(std::string placeholderText);
 
-	char* getPlaceholder();
-
+	char* getInput();
+	void setInput(std::string replacement);
 };

@@ -105,6 +105,7 @@ void HudWindow::render(bool slotMode) {
 			if (widget->isHidden()) {
 				continue;
 			}
+			ImGui::SetNextItemWidth(widget->getWidth());
 			ImGui::SetCursorPos(widget->getPos());
 
 			widget->render();
@@ -149,6 +150,8 @@ void HudWindow::addWidget(std::string identifier, int renderPriority, Widget* wi
 
 	widgetList[renderPriority].push_back(widget);
 	widgetIdentifiers[identifier] = widget;
+
+	widget->setIdent(identifier);
 }
 
 template<typename T>
@@ -713,6 +716,20 @@ static int addCheckboxWidget(lua_State* L) {
 	return 0;
 }
 
+static int addTextFieldWidget(lua_State* L) {
+	int handle = luaL_checknumber(L, 1);
+	std::string identifier = getStringFromLuaState(L, 2);
+	int size = luaL_checknumber(L, 3);
+	int priority = luaL_checknumber(L, 4);
+
+	auto hudWindow = HudWindowManager::Singleton->get(handle);
+
+
+
+	hudWindow->addWidget(identifier, priority, new TextFieldWidget(size));
+
+	return 0;
+}
 
 template<typename T>
 std::optional<T*> doWidgetAction(lua_State* L) {
@@ -819,6 +836,46 @@ static int setButtonWidgetLabel(lua_State* L) {
 	return 1;
 }
 
+static int setTextFieldPlaceholder(lua_State* L) {
+	auto widget = doWidgetAction<TextFieldWidget>(L);
+	std::string text = getStringFromLuaState(L, 3);
+
+	if (!widget.has_value()) {
+		return 0;
+	}
+
+	widget.value()->setPlaceholder(text);
+	lua_pushboolean(L, 1);
+
+	return 1;
+}
+
+static int getTextFieldContent(lua_State* L) {
+	auto widget = doWidgetAction<TextFieldWidget>(L);
+	std::string text = getStringFromLuaState(L, 3);
+
+	if (!widget.has_value()) {
+		return 0;
+	}
+
+	lua_pushstring(L, std::string(widget.value()->getInput()).c_str());
+
+	return 1;
+}
+
+static int setTextFieldContent(lua_State* L) {
+	auto widget = doWidgetAction<TextFieldWidget>(L);
+	std::string text = getStringFromLuaState(L, 3);
+
+	if (!widget.has_value()) {
+		return 0;
+	}
+
+	widget.value()->setInput(text);
+	lua_pushboolean(L, 1);
+
+	return 1;
+}
 
 static int setWidgetX(lua_State* L) {
 	auto widget = doWidgetAction<Widget>(L);
@@ -849,7 +906,7 @@ static int setWidgetY(lua_State* L) {
 }
 
 static int setWidgetWidth(lua_State* L) {
-	auto widget = doWidgetAction<TextWidget>(L);
+	auto widget = doWidgetAction<Widget>(L);
 	float x = luaL_checknumber(L, 3);
 
 	if (!widget.has_value()) {
@@ -863,7 +920,7 @@ static int setWidgetWidth(lua_State* L) {
 }
 
 static int setWidgetHeight(lua_State* L) {
-	auto widget = doWidgetAction<TextWidget>(L);
+	auto widget = doWidgetAction<Widget>(L);
 	float y = luaL_checknumber(L, 3);
 
 	if (!widget.has_value()) {
@@ -994,6 +1051,12 @@ void InjectHudWinSL(lua_State* L) {
 	functionMap["setCheckboxChecked"] = setCheckboxChecked;
 	functionMap["getCheckboxChecked"] = getCheckboxChecked;
 	functionMap["setCheckboxLabel"] = setCheckboxLabel;
+
+	functionMap["addTextFieldWidget"] = addTextFieldWidget;
+	functionMap["setTextFieldPlaceholder"] = setTextFieldPlaceholder;
+	functionMap["getTextFieldContent"] = getTextFieldContent;
+	functionMap["setTextFieldContent"] = setTextFieldContent;
+
 
 
 	functionMap["setWidgetX"] = setWidgetX;
