@@ -4,6 +4,8 @@ using LuaCFunction = int (*)(lua_State* L);
 
 void InjectHudWinSL(lua_State* L);
 
+float signedDistanceToRectEdge(ImVec2 topLeft, ImVec2 size, ImVec2 point);
+
 // class HudWindow {
 HudWindow::HudWindow(HudWinScripts* lua) {
 	this->scripts = lua;
@@ -281,18 +283,21 @@ void HudWindowManager::renderAll() {
 		auto window = pair.second;
 
 		if (scaredMode) {
-			ImVec2 center = ImVec2{ window->pos.x + window->getSize().x / 2, window->pos.y + window->getSize().y / 2 };
-
-			float maxDist = std::sqrtf(std::powf(center.x - window->pos.x, 2) + std::powf(center.y - window->pos.y, 2));
-			maxDist *= 1.2f;
-
 			POINT point;
 			GetCursorPos(&point); // Get the position in screen coordinates
 			ScreenToClient(hwnd, &point); // Convert to window coordinates
 
-			long distance = std::sqrtl(std::powl(point.x - center.x, 2) + std::powl(point.y - center.y, 2));
+			float distance = signedDistanceToRectEdge(window->pos, window->getSize(), ImVec2{ (float)point.x, (float)point.y });
 
-			transparency = std::min(std::powf(std::clamp(distance / maxDist, 0.f, 1.f), 2), transparency);
+			if (distance < 0) {
+				distance = 0;
+			}
+
+			distance *= 0.03;
+
+			distance = std::pow(distance, 2);
+
+			transparency = std::min(std::clamp(distance, 0.f, 1.f), transparency);
 		}
 
 			curHandle = pair.first;
@@ -1001,6 +1006,23 @@ static int calculateTextHeight(lua_State* L) {
 	lua_pushnumber(L, textSize.y);
 
 	return 1;
+}
+
+float signedDistanceToRectEdge(ImVec2 topLeft, ImVec2 size, ImVec2 point) {
+	// Calculate the bottom right corner of the rectangle
+	ImVec2 bottomRight = ImVec2(topLeft.x + size.x, topLeft.y + size.y);
+
+	// Compute distances to each edge
+	float dx = std::max(std::max(topLeft.x - point.x, 0.0f), point.x - bottomRight.x);
+	float dy = std::max(std::max(topLeft.y - point.y, 0.0f), point.y - bottomRight.y);
+
+	// If the point is inside the rectangle, calculate the minimum distance to an edge
+	if (dx < 0 && dy < 0) {
+		return std::max(dx, dy);
+	}
+
+	// If the point is outside the rectangle, calculate Euclidean distance to the nearest edge
+	return std::sqrt(dx * dx + dy * dy);
 }
 
 // Inject Hud Window Standard Library
