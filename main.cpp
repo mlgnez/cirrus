@@ -1,5 +1,6 @@
 #include "includes.hpp"
 #include "CumuloServer.hpp"
+#include "services.hpp"
 
 // Data
 static ID3D10Device* g_pd3dDevice = nullptr;
@@ -32,6 +33,17 @@ void showConsole() {
 // Main code
 int main(int argc, char* argv[])
 {
+    // Desired framerate
+    const double targetFrameRate = 60.0;
+    const double targetFrameTime = 1000.0 / targetFrameRate; // in milliseconds
+
+    LARGE_INTEGER frequency;
+    LARGE_INTEGER start, end;
+    double frameTime;
+
+    // Initialize the frequency
+    QueryPerformanceFrequency(&frequency);
+
     // hideConsole();
     showConsole();
     
@@ -97,6 +109,7 @@ int main(int argc, char* argv[])
 
     registry->initLua();
 
+    registry->registerService(WIFI_SERVICE_IDENTIFIER, new WifiService());
 
     bool done = false;
     if (argc > 1) {
@@ -111,8 +124,8 @@ int main(int argc, char* argv[])
             input->update();
             SetForegroundWindow(hwnd);
 
-
-
+            QueryPerformanceCounter(&start);
+            
             MSG msg;
             while (::PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
             {
@@ -171,6 +184,14 @@ int main(int argc, char* argv[])
             ImGui_ImplDX10_RenderDrawData(ImGui::GetDrawData());
 
             g_pSwapChain->Present(1, 0);
+
+            QueryPerformanceCounter(&end);
+            frameTime = static_cast<double>(end.QuadPart - start.QuadPart) / frequency.QuadPart * 1000.0;
+
+            // If frame is processed too quickly, wait the remaining time
+            if (frameTime < targetFrameTime) {
+                Sleep(static_cast<DWORD>(targetFrameTime - frameTime));
+            }
         }
 
         delete registry;

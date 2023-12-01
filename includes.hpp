@@ -23,6 +23,8 @@
 #include <type_traits>
 #include <algorithm>
 #include <shlobj.h>
+#include <Iphlpapi.h>
+#include <queue>
 #include "Input.hpp"
 #include "TimeKeeper.hpp"
 #include "UrlProtocolManager.h"

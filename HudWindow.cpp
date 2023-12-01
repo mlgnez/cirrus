@@ -1,5 +1,6 @@
 #include "HudWindow.hpp"
 
+
 using LuaCFunction = int (*)(lua_State* L);
 
 void InjectHudWinSL(lua_State* L);
@@ -251,6 +252,7 @@ HudWindowManager::HudWindowManager(InputHelper* input, LONG_PTR exStyle, HWND hw
 	this->exStyle = exStyle;
 	this->hwnd = hwnd;
 	this->timekeeper = timekeeper;
+	this->registered_services = {};
 	curHandle = -1;
 	if (HudWindowManager::Singleton == nullptr) {
 		isSingletonInstance = true;
@@ -259,8 +261,8 @@ HudWindowManager::HudWindowManager(InputHelper* input, LONG_PTR exStyle, HWND hw
 	}
 }
 
-std::tuple<int, HudWindow*> HudWindowManager::registerWindow(HudWinScripts* lua) {
-	auto window = new HudWindow(lua);
+std::tuple<int, HudWindow*> HudWindowManager::registerWindow(Addon* lua) {
+	auto window = new HudWindow(lua->scripts);
 
 	int location = windows.size();
 	curHandle = location;
@@ -300,8 +302,21 @@ void HudWindowManager::renderAll() {
 			transparency = std::min(std::clamp(distance, 0.f, 1.f), transparency);
 		}
 
-			curHandle = pair.first;
-			pair.second->render(this->slotMode);
+		curHandle = pair.first;
+		pair.second->render(this->slotMode);
+		
+	}
+
+	for (const auto& pair : registered_services) {
+		auto service = pair.second;
+		if (service->timeSinceLastTick > service->getTickrate()) {
+			std::cout << service->getTickrate() << std::endl;
+			service->timeSinceLastTick = 0;
+			pair.second->tick();
+		}
+		else {
+			service->timeSinceLastTick += timekeeper->deltaTime;
+		}
 		
 	}
 
@@ -378,7 +393,7 @@ void HudWindowManager::initLua() {
 
 
 	for (const auto& addon : addons) {
-		registerWindow(addon->scripts);
+		registerWindow(addon);
 	}
 }
 
@@ -1008,6 +1023,32 @@ static int calculateTextHeight(lua_State* L) {
 	return 1;
 }
 
+bool HudWindowManager::isListeningTo(std::string serviceIdent, Addon* addon) {
+	for (const auto serviceAddon : registered_services[serviceIdent]->subscribedAddons) {
+		if (serviceAddon->identifier == addon->identifier) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static int getWifiData(lua_State* L) {
+	auto hudWindow = HudWindowManager::Singleton->get(HudWindowManager::Singleton->curHandle);
+	auto service = HudWindowManager::Singleton->getService<WifiService>(WIFI_SERVICE_IDENTIFIER).value();
+	auto addon = HudWindowManager::Singleton->getAddonFromWindow(hudWindow);
+	
+	if (!HudWindowManager::Singleton->isListeningTo(WIFI_SERVICE_IDENTIFIER, addon)) {
+		service->listen(addon);
+	}
+
+	auto data = service->getData();
+
+	data.toLuaTable(L);
+
+	return 1;
+}
+
 float signedDistanceToRectEdge(ImVec2 topLeft, ImVec2 size, ImVec2 point) {
 	// Calculate the bottom right corner of the rectangle
 	ImVec2 bottomRight = ImVec2(topLeft.x + size.x, topLeft.y + size.y);
@@ -1079,6 +1120,7 @@ void InjectHudWinSL(lua_State* L) {
 	functionMap["getTextFieldContent"] = getTextFieldContent;
 	functionMap["setTextFieldContent"] = setTextFieldContent;
 
+	functionMap["getWifiData"] = getWifiData;
 
 
 	functionMap["setWidgetX"] = setWidgetX;

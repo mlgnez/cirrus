@@ -2,6 +2,10 @@
 #include "includes.hpp"
 #include "widget.hpp"
 #include "LuaSL.hpp"
+#include "services.hpp"
+
+class AnyService;
+
 
 struct HudWinScripts {
 	std::string render;
@@ -17,7 +21,7 @@ struct PersistentDataStore {
 	std::unordered_map<std::string, int> intStorage;
 	std::unordered_map<std::string, float> floatStorage;
 	std::unordered_map<std::string, std::string> stringStorage;
-	std::unordered_map<std::string, boolean> flagStorage;
+	std::unordered_map<std::string, bool> flagStorage;
 };
 
 struct CallbackFunction {
@@ -25,6 +29,8 @@ struct CallbackFunction {
 	std::function<void(lua_State*)> callbackSetup;
 	std::function<void(lua_State*)> callbackCleanup;
 };
+
+class Addon;
 
 class HudWindow {
 private:
@@ -44,6 +50,7 @@ public:
 	LONG_PTR exStyle;
 	HWND hwnd;
 	ImVec2 pos;
+	Addon* addon;
 
 	HudWindow(HudWinScripts* lua);
 	~HudWindow();
@@ -98,6 +105,7 @@ class HudWindowManager {
 private:
 	std::unordered_map<int, HudWindow*> windows;
 	std::vector<Addon*> addons;
+	std::unordered_map<std::string, AnyService*> registered_services;
 public:
 	int curHandle;
 	static HudWindowManager* Singleton;
@@ -111,11 +119,31 @@ public:
 
 	HudWindowManager(InputHelper* input, LONG_PTR exStyle, HWND hwnd, TimeKeeper* timekeeper);
 
-	std::tuple<int, HudWindow*> registerWindow(HudWinScripts* lua);
+	std::tuple<int, HudWindow*> registerWindow(Addon* lua);
 
 	void initLua();
 
 	void renderAll();
+
+	inline void registerService(std::string ident, AnyService* service) { registered_services[ident] = service; }
+
+	template <typename T>
+	inline std::optional<T*> getService(std::string ident) {
+		if (!registered_services.contains(ident)) {
+			return std::optional<T*>(nullptr);
+		}
+
+		AnyService* service = registered_services[ident];
+
+		T* casted = static_cast<T*>(service);
+
+		if (casted == nullptr) {
+			return std::optional<T*>(nullptr);
+		}
+
+		return casted;
+	}
+	bool isListeningTo(std::string serviceIdent, Addon* addon);
 
 	HudWindow* get(int handle);
 	std::optional<int> gethandle(std::string name);
