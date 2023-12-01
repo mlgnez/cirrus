@@ -115,9 +115,24 @@ void HudWindow::render(bool slotMode) {
 		}
 	}
 	
-	ImGui::SetWindowPos(pos);
+	if (ImGui::IsItemHovered()) {
+
+		ImGui::SetWindowPos(pos);
+	}
 
 	ImGui::End();
+
+	if (slotMode) {
+
+		ImGui::Begin("Movement Mode", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
+		ImGui::SetNextWindowPos(ImVec2(100, 100));
+
+		ImGui::Text("Movement Mode: Enabled");
+
+		ImGui::End();
+
+	}
 }
 
 void HudWindow::awake() {
