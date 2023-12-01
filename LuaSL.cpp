@@ -106,6 +106,43 @@ static int getScreenHeight(lua_State* L) {
     return 1;
 }
 
+static int getClipboard(lua_State* L) {
+    HANDLE h;
+    if (!OpenClipboard(NULL))
+        return 0;
+
+    h = GetClipboardData(CF_TEXT);
+
+    lua_pushstring(L, (char*)h);
+
+    CloseClipboard();
+
+    return 1;
+}
+
+static int setClipboard(lua_State* L) {
+    std::string clipcontent = getStringFromLuaState(L, 1);
+    if (!OpenClipboard(NULL))
+        return 0;
+
+    EmptyClipboard();
+
+    HGLOBAL hg = GlobalAlloc(GMEM_MOVEABLE, clipcontent.size() + 1);
+    if (!hg) {
+        CloseClipboard();
+        return 0;
+    }
+
+    memcpy(GlobalLock(hg), clipcontent.c_str(), clipcontent.size() + 1);
+    GlobalUnlock(hg);
+
+    SetClipboardData(CF_TEXT, hg);
+
+    CloseClipboard();
+
+    return 0;
+}
+
 
 
 void IncludeLuaSL(lua_State* L) {
@@ -117,6 +154,8 @@ void IncludeLuaSL(lua_State* L) {
     functionMap["clamp"] = clamp;
     functionMap["getScreenWidth"] = getScreenWidth;
     functionMap["getScreenHeight"] = getScreenHeight;
+    functionMap["getClipboard"] = getClipboard;
+    functionMap["setClipboard"] = setClipboard;
 
     for (const auto& pair : functionMap) {
         lua_register(L, pair.first.c_str(), pair.second);

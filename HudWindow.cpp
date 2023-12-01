@@ -310,7 +310,7 @@ void HudWindowManager::renderAll() {
 	for (const auto& pair : registered_services) {
 		auto service = pair.second;
 		if (service->timeSinceLastTick > service->getTickrate()) {
-			std::cout << service->getTickrate() << std::endl;
+			// std::cout << service->getTickrate() << std::endl;
 			service->timeSinceLastTick = 0;
 			pair.second->tick();
 		}
@@ -1037,7 +1037,7 @@ static int getWifiData(lua_State* L) {
 	auto hudWindow = HudWindowManager::Singleton->get(HudWindowManager::Singleton->curHandle);
 	auto service = HudWindowManager::Singleton->getService<WifiService>(WIFI_SERVICE_IDENTIFIER).value();
 	auto addon = HudWindowManager::Singleton->getAddonFromWindow(hudWindow);
-	
+
 	if (!HudWindowManager::Singleton->isListeningTo(WIFI_SERVICE_IDENTIFIER, addon)) {
 		service->listen(addon);
 	}
@@ -1047,7 +1047,11 @@ static int getWifiData(lua_State* L) {
 	data.toLuaTable(L);
 
 	return 1;
+
+
 }
+
+
 
 float signedDistanceToRectEdge(ImVec2 topLeft, ImVec2 size, ImVec2 point) {
 	// Calculate the bottom right corner of the rectangle
