@@ -165,7 +165,7 @@ static int postResourceAt(lua_State* L) {
 void json_to_lua_table(lua_State* L, const nlohmann::json& j) {
     if (j.is_object()) {
         lua_newtable(L); // Create a new table on the Lua stack
-        for (auto& el : j.items()) {
+        for (auto& el : j.items()) { 
             lua_pushstring(L, el.key().c_str()); // Push the key
             json_to_lua_table(L, el.value()); // Recursively process the value
             lua_settable(L, -3); // Set the key-value pair in the table
@@ -206,6 +206,7 @@ nlohmann::json lua_table_to_json(lua_State* L, int index) {
     }
 
     lua_pushnil(L); // first key
+
     while (lua_next(L, index) != 0) {
         // 'key' is at index -2 and 'value' at index -1
         std::string key = lua_tostring(L, -2); // Convert the key to string

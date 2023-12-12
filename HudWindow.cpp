@@ -99,7 +99,7 @@ void HudWindow::render(bool slotMode) {
 		SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle | WS_EX_TRANSPARENT);
 	}
 
-	if (luaL_dostring(lua_state, scripts->render.c_str()) != LUA_OK) {
+ 	if (luaL_dostring(lua_state, scripts->render.c_str()) != LUA_OK) {
 		std::cerr << "Failed to render HudWindow:" << lua_tostring(lua_state, -1) << std::endl;
 	}
 
