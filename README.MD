@@ -1,3 +1,6 @@
+This was made for a school project, do not expect a compiling project.
+Thanks to github.com/Rubyboat1207 for doing all of the Lua interpreting stuff and helping with C++
+
 # Lua Functions Documentation
 
 ## HudWindowRegistry
